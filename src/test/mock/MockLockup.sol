@@ -12,11 +12,15 @@ import {IECOxLockup} from "../../interfaces/IECOxLockup.sol";
 contract MockLockup is IECOxLockup, ERC20Upgradeable, IERC1820ImplementerUpgradeable {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
+    /// @notice User cannot withdraw after voting
+    error Voted();
+
     bytes32 internal constant ERC1820_ACCEPT_MAGIC =
         keccak256(abi.encodePacked("ERC1820_ACCEPT_MAGIC"));
 
     address public eco;
     mapping(address => mapping(address => bool)) delegates;
+    bool voted;
 
     constructor(address _eco) {
         eco = _eco;
@@ -39,7 +43,12 @@ contract MockLockup is IECOxLockup, ERC20Upgradeable, IERC1820ImplementerUpgrade
         return delegates[from][delegatee];
     }
 
+    function setVoted(bool value) external {
+        voted = value;
+    }
+
     function withdraw(uint256 _amount) external {
+        if (voted) revert Voted();
         IERC20Upgradeable(eco).safeTransfer(msg.sender, _amount);
         _burn(msg.sender, _amount);
     }

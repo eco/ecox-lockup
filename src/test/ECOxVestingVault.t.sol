@@ -107,6 +107,63 @@ contract ECOxVestingVaultTest is DSTestPlus {
         assertEq(vault.unvested(), 0);
     }
 
+    function testAssertDelegation() public {
+        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
+        assertFalse(lockup.isDelegated(address(vault), address(this)));
+        assertFalse(lockup.isDelegated(address(vault), address(factory)));
+        hevm.warp(initialTimestamp + 1 days);
+        assertClaimAmount(100);
+        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
+        assertFalse(lockup.isDelegated(address(vault), address(this)));
+        assertFalse(lockup.isDelegated(address(vault), address(factory)));
+    }
+
+    function testECOxStaking() public {
+        assertEq(token.balanceOf(address(vault)), 0);
+        // instead of ECOx in the vault, it stores sECOx
+        assertEq(lockup.balanceOf(address(vault)), 300);
+        hevm.warp(initialTimestamp + 1 days);
+        assertClaimAmount(100);
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(lockup.balanceOf(address(vault)), 200);
+    }
+
+    // note: can parameterize count & amountPerUnlock, 
+    // but it is very slow
+    // function testManyUnlocks(uint8 count, uint64 amountPerUnlock) public {
+    function testManyUnlocks() public {
+        uint16 count = 500;
+        uint256 amountPerUnlock = 12341234;
+        uint256[] memory amounts = new uint256[](count);
+        uint256[] memory timestamps = new uint256[](count);
+        token.mint(address(this), uint256(count) * amountPerUnlock);
+        token.approve(address(factory), uint256(count) * amountPerUnlock);
+        for (uint256 i = 0; i < count; i++) {
+            amounts[i] = amountPerUnlock;
+            timestamps[i] = initialTimestamp + ((i + 1) * 86400);
+        }
+
+        vault = ECOxVestingVault(
+            factory.createVault(
+                address(token),
+                address(beneficiary),
+                amounts,
+                timestamps
+            )
+        );
+
+        for (uint256 i = 0; i < count; i++) {
+            hevm.warp(initialTimestamp + ((i + 1) * 86400));
+            assertClaimAmount(amountPerUnlock);
+        }
+    }
+
+    function testFailWithdrawAfterVoting() public {
+        hevm.warp(initialTimestamp + 1 days);
+        lockup.setVoted(true);
+        assertClaimAmount(100);
+    }
+
     function testWarpAndClaim(uint256 timestamp) public {
         hevm.warp(timestamp);
         if (timestamp >= initialTimestamp + 3 days) {
@@ -118,6 +175,42 @@ contract ECOxVestingVaultTest is DSTestPlus {
         } else {
             assertEq(vault.vested(), 0);
         }
+    }
+
+    function testFailTooManyAmounts() public {
+        uint256[] memory amounts = new uint256[](4);
+        amounts[0] = 100;
+        amounts[1] = 200;
+        amounts[2] = 300;
+        amounts[3] = 400;
+        vault = ECOxVestingVault(
+            factory.createVault(
+                address(token),
+                address(beneficiary),
+                amounts,
+                makeArray(
+                    initialTimestamp + 1 days,
+                    initialTimestamp + 2 days,
+                    initialTimestamp + 3 days
+                )
+            )
+        );
+    }
+
+    function testFailTooManyTimestamps() public {
+        uint256[] memory timestamps = new uint256[](4);
+        timestamps[0] = initialTimestamp + 1 days;
+        timestamps[1] = initialTimestamp + 2 days;
+        timestamps[2] = initialTimestamp + 3 days;
+        timestamps[3] = initialTimestamp + 4 days;
+        vault = ECOxVestingVault(
+            factory.createVault(
+                address(token),
+                address(beneficiary),
+                makeArray(100, 100, 100),
+                timestamps
+            )
+        );
     }
 
     function testFailClaimUnauthorized(uint256 timestamp) public {
