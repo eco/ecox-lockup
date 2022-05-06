@@ -5,6 +5,7 @@ import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/co
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
+import {VestingVault} from "vesting/VestingVault.sol";
 import {IECOx} from "./interfaces/IECOx.sol";
 import {IECOxLockup} from "./interfaces/IECOxLockup.sol";
 
@@ -80,6 +81,9 @@ contract ECOxVestingVault is ChunkedVestingVault {
         IECOxLockup(lockup).withdraw(amount);
     }
 
+    /**
+     * @inheritdoc VestingVault
+     */
     function unvested() public view override returns (uint256) {
         return IERC20Upgradeable(lockup).balanceOf(address(this)) - vested();
     }
