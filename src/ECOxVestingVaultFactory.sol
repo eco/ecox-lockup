@@ -4,14 +4,12 @@ pragma solidity 0.8.10;
 import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IVestingVaultFactory} from "vesting/interfaces/IVestingVaultFactory.sol";
 import {ECOxVestingVault} from "./ECOxVestingVault.sol";
 
-contract ECOxVestingVaultFactory {
+contract ECOxVestingVaultFactory is IVestingVaultFactory {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using ClonesWithImmutableArgs for address;
-
-    /// @notice Some parameters are invalid
-    error InvalidParams();
 
     address public immutable implementation;
 
