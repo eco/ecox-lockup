@@ -49,6 +49,7 @@ contract ECOxVestingVaultFactory {
         );
         IERC20Upgradeable(token).approve(address(clone), totalTokens);
         clone.initialize();
+        emit VaultCreated(token, beneficiary, address(clone));
         return address(clone);
     }
 }
