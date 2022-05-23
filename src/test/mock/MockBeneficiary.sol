@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
-import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
+import {ECOxVestingVault} from "../../ECOxVestingVault.sol";
 
 contract MockBeneficiary {
-    function claim(IVestingVault vault) public {
+    function claim(ECOxVestingVault vault) public {
         vault.claim();
+    }
+
+    function unstakeVestedECOx(ECOxVestingVault vault) public returns (uint256) {
+        return vault.unstakeVestedECOx();
     }
 }

@@ -107,6 +107,57 @@ contract ECOxVestingVaultTest is DSTestPlus {
         assertEq(vault.unvested(), 0);
     }
 
+    function testUnstakePartial() public {
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 300);
+        hevm.warp(initialTimestamp + 1 days);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 200);
+        uint256 unstaked = beneficiary.unstakeVestedECOx(vault);
+        assertEq(unstaked, 100);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 200);
+        assertClaimAmount(100);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 200);
+
+        hevm.warp(initialTimestamp + 2 days);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 100);
+        unstaked = beneficiary.unstakeVestedECOx(vault);
+        assertEq(unstaked, 100);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 100);
+        assertClaimAmount(100);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 100);
+
+        hevm.warp(initialTimestamp + 3 days);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 0);
+        unstaked = beneficiary.unstakeVestedECOx(vault);
+        assertEq(unstaked, 100);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 0);
+        assertClaimAmount(100);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 0);
+    }
+
+    function tesUnstakeMultipleTimes() public {
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 300);
+        hevm.warp(initialTimestamp + 1 days);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 200);
+        uint256 unstaked = beneficiary.unstakeVestedECOx(vault);
+        assertEq(unstaked, 100);
+        unstaked = beneficiary.unstakeVestedECOx(vault);
+        assertEq(unstaked, 0);
+        unstaked = beneficiary.unstakeVestedECOx(vault);
+        assertEq(unstaked, 0);
+    }
+
     function testAssertDelegation() public {
         assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
         assertFalse(lockup.isDelegated(address(vault), address(this)));
@@ -128,7 +179,7 @@ contract ECOxVestingVaultTest is DSTestPlus {
         assertEq(lockup.balanceOf(address(vault)), 200);
     }
 
-    // note: can parameterize count & amountPerUnlock, 
+    // note: can parameterize count & amountPerUnlock,
     // but it is very slow
     // function testManyUnlocks(uint8 count, uint64 amountPerUnlock) public {
     function testManyUnlocks() public {
@@ -156,6 +207,16 @@ contract ECOxVestingVaultTest is DSTestPlus {
             hevm.warp(initialTimestamp + ((i + 1) * 86400));
             assertClaimAmount(amountPerUnlock);
         }
+    }
+
+    function testUnstakeNonVested() public {
+        uint256 unstaked = beneficiary.unstakeVestedECOx(vault);
+        assertEq(unstaked, 0);
+    }
+
+    function testFailUnstakedNonBeneficiary() public {
+        hevm.warp(initialTimestamp + 1 days);
+        vault.unstakeVestedECOx();
     }
 
     function testFailWithdrawAfterVoting() public {
@@ -226,14 +287,15 @@ contract ECOxVestingVaultTest is DSTestPlus {
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
-        uint256 initialVaultStakedBalance = lockup.balanceOf(address(vault));
+        uint256 initialVaultBalance = lockup.balanceOf(address(vault)) +
+            token.balanceOf(address(vault));
         beneficiary.claim(vault);
         assertEq(
             initialBalance + amount,
             token.balanceOf(address(beneficiary))
         );
         assertEq(
-            initialVaultStakedBalance - amount,
+            initialVaultBalance - amount,
             lockup.balanceOf(address(vault))
         );
     }

@@ -18,6 +18,8 @@ contract ECOxVestingVault is ChunkedVestingVault {
     /// @notice Lockup address is invalid
     error InvalidLockup();
 
+    event Unstake(uint256 amount);
+
     IERC1820RegistryUpgradeable internal constant ERC1820 =
         IERC1820RegistryUpgradeable(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
     bytes32 internal constant LOCKUP_HASH =
@@ -44,7 +46,7 @@ contract ECOxVestingVault is ChunkedVestingVault {
      * @inheritdoc ChunkedVestingVault
      */
     function onClaim(uint256 amount) internal override {
-        unstakeECOx(amount);
+        unstakeVestedECOx();
         super.onClaim(amount);
     }
 
@@ -75,16 +77,26 @@ contract ECOxVestingVault is ChunkedVestingVault {
     }
 
     /**
-     * @notice Delegates staked ECOx back to the beneficiary
+     * @notice Unstakes any vested staked ECOx that hasn't already been unstaked
+     * @dev this allows users to vote with unvested tokens while still
+     * being able to claim vested tokens
+     * @return The amount of ECOx unstaked
      */
-    function unstakeECOx(uint256 amount) internal {
+    function unstakeVestedECOx() public returns (uint256) {
+        if (msg.sender != beneficiary()) revert Unauthorized();
+        uint256 amount = vested() - token().balanceOf(address(this));
         IECOxLockup(lockup).withdraw(amount);
+        emit Unstake(amount);
+        return amount;
     }
 
     /**
      * @inheritdoc VestingVault
      */
     function unvested() public view override returns (uint256) {
-        return IERC20Upgradeable(lockup).balanceOf(address(this)) - vested();
+        return
+            IERC20Upgradeable(lockup).balanceOf(address(this)) +
+            token().balanceOf(address(this)) -
+            vested();
     }
 }
