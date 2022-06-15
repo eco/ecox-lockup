@@ -7,7 +7,15 @@ contract MockBeneficiary {
         vault.claim();
     }
 
-    function unstakeVestedECOx(ECOxVestingVault vault) public returns (uint256) {
-        return vault.unstakeVestedECOx();
+    function unstakeVested(ECOxVestingVault vault) public returns (uint256) {
+        return vault.unstakeVested();
+    }
+
+    function stake(ECOxVestingVault vault, uint256 amount) public {
+        vault.stake(amount);
+    }
+
+    function delegate(ECOxVestingVault vault, address who) public {
+        vault.delegate(who);
     }
 }

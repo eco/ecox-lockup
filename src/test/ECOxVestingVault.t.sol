@@ -5,6 +5,7 @@ import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
 import {MockECOx} from "./mock/MockECOx.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {MockLockup} from "./mock/MockLockup.sol";
+import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
 import {ECOxVestingVaultFactory} from "../ECOxVestingVaultFactory.sol";
 import {ECOxVestingVault} from "../ECOxVestingVault.sol";
 
@@ -113,7 +114,7 @@ contract ECOxVestingVaultTest is DSTestPlus {
         hevm.warp(initialTimestamp + 1 days);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 200);
-        uint256 unstaked = beneficiary.unstakeVestedECOx(vault);
+        uint256 unstaked = beneficiary.unstakeVested(vault);
         assertEq(unstaked, 100);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 200);
@@ -124,7 +125,7 @@ contract ECOxVestingVaultTest is DSTestPlus {
         hevm.warp(initialTimestamp + 2 days);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 100);
-        unstaked = beneficiary.unstakeVestedECOx(vault);
+        unstaked = beneficiary.unstakeVested(vault);
         assertEq(unstaked, 100);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 100);
@@ -135,7 +136,7 @@ contract ECOxVestingVaultTest is DSTestPlus {
         hevm.warp(initialTimestamp + 3 days);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 0);
-        unstaked = beneficiary.unstakeVestedECOx(vault);
+        unstaked = beneficiary.unstakeVested(vault);
         assertEq(unstaked, 100);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 0);
@@ -150,11 +151,11 @@ contract ECOxVestingVaultTest is DSTestPlus {
         hevm.warp(initialTimestamp + 1 days);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 200);
-        uint256 unstaked = beneficiary.unstakeVestedECOx(vault);
+        uint256 unstaked = beneficiary.unstakeVested(vault);
         assertEq(unstaked, 100);
-        unstaked = beneficiary.unstakeVestedECOx(vault);
+        unstaked = beneficiary.unstakeVested(vault);
         assertEq(unstaked, 0);
-        unstaked = beneficiary.unstakeVestedECOx(vault);
+        unstaked = beneficiary.unstakeVested(vault);
         assertEq(unstaked, 0);
     }
 
@@ -167,6 +168,18 @@ contract ECOxVestingVaultTest is DSTestPlus {
         assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
         assertFalse(lockup.isDelegated(address(vault), address(this)));
         assertFalse(lockup.isDelegated(address(vault), address(factory)));
+    }
+
+    function testDelegateNotBeneficiary() public {
+        hevm.expectRevert(IVestingVault.Unauthorized.selector);
+        vault.delegate(address(this));
+    }
+
+    function testDelegate() public {
+        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
+        beneficiary.delegate(vault, address(this));
+        assertFalse(lockup.isDelegated(address(vault), address(beneficiary)));
+        assertTrue(lockup.isDelegated(address(vault), address(this)));
     }
 
     function testECOxStaking() public {
@@ -210,19 +223,33 @@ contract ECOxVestingVaultTest is DSTestPlus {
     }
 
     function testUnstakeNonVested() public {
-        uint256 unstaked = beneficiary.unstakeVestedECOx(vault);
+        uint256 unstaked = beneficiary.unstakeVested(vault);
         assertEq(unstaked, 0);
     }
 
     function testFailUnstakedNonBeneficiary() public {
         hevm.warp(initialTimestamp + 1 days);
-        vault.unstakeVestedECOx();
+        vault.unstakeVested();
     }
 
     function testFailWithdrawAfterVoting() public {
         hevm.warp(initialTimestamp + 1 days);
         lockup.setVoted(true);
         assertClaimAmount(100);
+    }
+
+    function testStakeAlreadyStaked(uint256 amount) public {
+        if (amount == 0) amount = 1;
+        assertEq(vault.vested(), 0);
+        hevm.expectRevert(ECOxVestingVault.InvalidAmount.selector);
+        beneficiary.stake(vault, amount);
+    }
+
+    function testStakeNotBeneficiary() public {
+        hevm.warp(initialTimestamp + 1 days);
+        assertEq(vault.vested(), 100);
+        hevm.expectRevert(IVestingVault.Unauthorized.selector);
+        vault.stake(100);
     }
 
     function testWarpAndClaim(uint256 timestamp) public {
