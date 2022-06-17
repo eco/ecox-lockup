@@ -21,8 +21,8 @@ contract ECOxVestingVault is ChunkedVestingVault {
     /// @notice Invalid staked amount
     error InvalidAmount();
 
-    event Unstake(uint256 amount);
-    event Stake(uint256 amount);
+    event Unstaked(uint256 amount);
+    event Staked(uint256 amount);
 
     IERC1820RegistryUpgradeable internal constant ERC1820 =
         IERC1820RegistryUpgradeable(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
@@ -81,7 +81,7 @@ contract ECOxVestingVault is ChunkedVestingVault {
         address _lockup = lockup;
         token().approve(_lockup, amount);
         IECOxLockup(_lockup).deposit(amount);
-        emit Stake(amount);
+        emit Staked(amount);
     }
 
     /**
@@ -111,7 +111,7 @@ contract ECOxVestingVault is ChunkedVestingVault {
         if (msg.sender != beneficiary()) revert Unauthorized();
         uint256 amount = vested() - token().balanceOf(address(this));
         IECOxLockup(lockup).withdraw(amount);
-        emit Unstake(amount);
+        emit Unstaked(amount);
         return amount;
     }
 
