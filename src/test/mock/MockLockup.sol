@@ -39,6 +39,10 @@ contract MockLockup is IECOxLockup, ERC20Upgradeable, IERC1820ImplementerUpgrade
         delegates[msg.sender] = delegatee;
     }
 
+    function undelegate() external {
+        delegates[msg.sender] = address(0);
+    }
+
     function isDelegated(address from, address delegatee) external view returns (bool) {
         return delegates[from] == delegatee;
     }

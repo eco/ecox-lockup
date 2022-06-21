@@ -50,7 +50,10 @@ contract ECOxVestingVault is ChunkedVestingVault {
      * @inheritdoc ChunkedVestingVault
      */
     function onClaim(uint256 amount) internal override {
-        unstakeVested();
+        uint256 balance = token().balanceOf(address(this));
+        if (balance < amount) {
+            _unstake(amount - balance);
+        }
         super.onClaim(amount);
     }
 
@@ -85,6 +88,14 @@ contract ECOxVestingVault is ChunkedVestingVault {
     }
 
     /**
+     * @notice Undelegates staked ECOx
+     */
+    function undelegate() external {
+        if (msg.sender != beneficiary()) revert Unauthorized();
+        IECOxLockup(lockup).undelegate();
+    }
+
+    /**
      * @notice Delegates staked ECOx back to the beneficiary
      * @param who The address to delegate to
      */
@@ -107,9 +118,18 @@ contract ECOxVestingVault is ChunkedVestingVault {
      * being able to claim vested tokens
      * @return The amount of ECOx unstaked
      */
-    function unstakeVested() public returns (uint256) {
+    function unstake(uint256 amount) external returns (uint256) {
         if (msg.sender != beneficiary()) revert Unauthorized();
-        uint256 amount = vested() - token().balanceOf(address(this));
+        return _unstake(amount);
+    }
+
+    /**
+     * @notice Unstakes any vested staked ECOx that hasn't already been unstaked
+     * @dev this allows users to vote with unvested tokens while still
+     * being able to claim vested tokens
+     * @return The amount of ECOx unstaked
+     */
+    function _unstake(uint256 amount) internal returns (uint256) {
         IECOxLockup(lockup).withdraw(amount);
         emit Unstake(amount);
         return amount;
