@@ -186,19 +186,6 @@ contract ECOxVestingVaultTest is Test {
         assertTrue(lockup.isDelegated(address(vault), address(this)));
     }
 
-    function testUndelegate() public {
-        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
-        beneficiary.delegate(vault, address(this));
-        assertTrue(lockup.isDelegated(address(vault), address(this)));
-        beneficiary.undelegate(vault);
-        assertTrue(lockup.isDelegated(address(vault), address(0)));
-    }
-
-    function testUndelegateNotBeneficiary() public {
-        vm.expectRevert(IVestingVault.Unauthorized.selector);
-        vault.undelegate();
-    }
-
     function testECOxStaking() public {
         assertEq(token.balanceOf(address(vault)), 0);
         // instead of ECOx in the vault, it stores sECOx

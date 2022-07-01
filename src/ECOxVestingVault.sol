@@ -88,14 +88,6 @@ contract ECOxVestingVault is ChunkedVestingVault {
     }
 
     /**
-     * @notice Undelegates staked ECOx
-     */
-    function undelegate() external {
-        if (msg.sender != beneficiary()) revert Unauthorized();
-        IECOxLockup(lockup).undelegate();
-    }
-
-    /**
      * @notice Delegates staked ECOx back to the beneficiary
      * @param who The address to delegate to
      */
