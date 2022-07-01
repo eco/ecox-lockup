@@ -7,4 +7,6 @@ interface IECOxLockup {
     function delegate(address delegatee) external;
 
     function withdraw(uint256 _amount) external;
+
+    function undelegate() external;
 }

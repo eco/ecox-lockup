@@ -19,7 +19,7 @@ contract MockLockup is IECOxLockup, ERC20Upgradeable, IERC1820ImplementerUpgrade
         keccak256(abi.encodePacked("ERC1820_ACCEPT_MAGIC"));
 
     address public eco;
-    mapping(address => mapping(address => bool)) delegates;
+    mapping(address => address) delegates;
     bool voted;
 
     constructor(address _eco) {
@@ -36,11 +36,15 @@ contract MockLockup is IECOxLockup, ERC20Upgradeable, IERC1820ImplementerUpgrade
     }
 
     function delegate(address delegatee) external {
-        delegates[msg.sender][delegatee] = true;
+        delegates[msg.sender] = delegatee;
+    }
+
+    function undelegate() external {
+        delegates[msg.sender] = address(0);
     }
 
     function isDelegated(address from, address delegatee) external view returns (bool) {
-        return delegates[from][delegatee];
+        return delegates[from] == delegatee;
     }
 
     function setVoted(bool value) external {

@@ -18,7 +18,11 @@ contract ECOxVestingVault is ChunkedVestingVault {
     /// @notice Lockup address is invalid
     error InvalidLockup();
 
-    event Unstake(uint256 amount);
+    /// @notice Invalid staked amount
+    error InvalidAmount();
+
+    event Unstaked(uint256 amount);
+    event Staked(uint256 amount);
 
     IERC1820RegistryUpgradeable internal constant ERC1820 =
         IERC1820RegistryUpgradeable(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
@@ -38,15 +42,18 @@ contract ECOxVestingVault is ChunkedVestingVault {
         if (_lockup == address(0)) revert InvalidLockup();
         lockup = _lockup;
 
-        stakeECOx();
-        delegateECOx();
+        _stake(token().balanceOf(address(this)));
+        _delegate(beneficiary());
     }
 
     /**
      * @inheritdoc ChunkedVestingVault
      */
     function onClaim(uint256 amount) internal override {
-        unstakeVestedECOx();
+        uint256 balance = token().balanceOf(address(this));
+        if (balance < amount) {
+            _unstake(amount - balance);
+        }
         super.onClaim(amount);
     }
 
@@ -61,19 +68,40 @@ contract ECOxVestingVault is ChunkedVestingVault {
 
     /**
      * @notice Stakes ECOx in the lockup contract
+     * @param amount The amount of ECOx to stake
      */
-    function stakeECOx() internal {
+    function stake(uint256 amount) external {
+        if (msg.sender != beneficiary()) revert Unauthorized();
+        if (amount > token().balanceOf(address(this))) revert InvalidAmount();
+        _stake(amount);
+    }
+
+    /**
+     * @notice Stakes ECOx in the lockup contract
+     * @param amount The amount of ECOx to stake
+     */
+    function _stake(uint256 amount) internal {
         address _lockup = lockup;
-        uint256 amount = token().balanceOf(address(this));
         token().approve(_lockup, amount);
         IECOxLockup(_lockup).deposit(amount);
+        emit Staked(amount);
     }
 
     /**
      * @notice Delegates staked ECOx back to the beneficiary
+     * @param who The address to delegate to
      */
-    function delegateECOx() internal {
-        IECOxLockup(lockup).delegate(beneficiary());
+    function delegate(address who) external {
+        if (msg.sender != beneficiary()) revert Unauthorized();
+        _delegate(who);
+    }
+
+    /**
+     * @notice Delegates staked ECOx back to the beneficiary
+     * @param who The address to delegate to
+     */
+    function _delegate(address who) internal {
+        IECOxLockup(lockup).delegate(who);
     }
 
     /**
@@ -82,11 +110,20 @@ contract ECOxVestingVault is ChunkedVestingVault {
      * being able to claim vested tokens
      * @return The amount of ECOx unstaked
      */
-    function unstakeVestedECOx() public returns (uint256) {
+    function unstake(uint256 amount) external returns (uint256) {
         if (msg.sender != beneficiary()) revert Unauthorized();
-        uint256 amount = vested() - token().balanceOf(address(this));
+        return _unstake(amount);
+    }
+
+    /**
+     * @notice Unstakes any vested staked ECOx that hasn't already been unstaked
+     * @dev this allows users to vote with unvested tokens while still
+     * being able to claim vested tokens
+     * @return The amount of ECOx unstaked
+     */
+    function _unstake(uint256 amount) internal returns (uint256) {
         IECOxLockup(lockup).withdraw(amount);
-        emit Unstake(amount);
+        emit Unstaked(amount);
         return amount;
     }
 
