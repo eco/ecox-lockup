@@ -34,6 +34,7 @@ contract ECOxVestingVaultTest is Test {
             factory.createVault(
                 address(token),
                 address(beneficiary),
+                address(0),
                 makeArray(100, 100, 100),
                 makeArray(
                     initialTimestamp + 1 days,
@@ -215,6 +216,7 @@ contract ECOxVestingVaultTest is Test {
             factory.createVault(
                 address(token),
                 address(beneficiary),
+                address(0),
                 amounts,
                 timestamps
             )
@@ -279,6 +281,7 @@ contract ECOxVestingVaultTest is Test {
             factory.createVault(
                 address(token),
                 address(beneficiary),
+                address(0),
                 amounts,
                 makeArray(
                     initialTimestamp + 1 days,
@@ -299,6 +302,7 @@ contract ECOxVestingVaultTest is Test {
             factory.createVault(
                 address(token),
                 address(beneficiary),
+                address(0),
                 makeArray(100, 100, 100),
                 timestamps
             )

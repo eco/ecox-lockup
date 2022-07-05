@@ -35,8 +35,8 @@ contract ECOxVestingVault is ChunkedVestingVault {
      * @notice Initializes the vesting vault
      * @dev this pulls in the required ERC20 tokens from the sender to setup
      */
-    function initialize() public override initializer {
-        ChunkedVestingVault._initialize();
+    function initialize(address admin) public override initializer {
+        ChunkedVestingVault._initialize(admin);
 
         address _lockup = getECOxLockup();
         if (_lockup == address(0)) revert InvalidLockup();
