@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
 import {Test} from "forge-std/Test.sol";
@@ -7,13 +7,13 @@ import {Vm} from "forge-std/Vm.sol";
 import {MockECOx} from "./mock/MockECOx.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {MockLockup} from "./mock/MockLockup.sol";
-import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
-import {ECOxVestingVaultFactory} from "../ECOxVestingVaultFactory.sol";
-import {ECOxVestingVault} from "../ECOxVestingVault.sol";
+import {ILockupVault} from "lockup/interfaces/ILockupVault.sol";
+import {ECOxLockupVaultFactory} from "../ECOxLockupVaultFactory.sol";
+import {ECOxLockupVault} from "../ECOxLockupVault.sol";
 
-contract ECOxVestingVaultTest is Test {
-    ECOxVestingVaultFactory factory;
-    ECOxVestingVault vault;
+contract ECOxLockupVaultTest is Test {
+    ECOxLockupVaultFactory factory;
+    ECOxLockupVault vault;
     MockECOx token;
     MockLockup lockup;
     MockBeneficiary beneficiary;
@@ -23,14 +23,14 @@ contract ECOxVestingVaultTest is Test {
         deployERC1820();
 
         token = new MockECOx("Mock", "MOCK", 18);
-        ECOxVestingVault implementation = new ECOxVestingVault();
-        factory = new ECOxVestingVaultFactory(address(implementation));
+        ECOxLockupVault implementation = new ECOxLockupVault();
+        factory = new ECOxLockupVaultFactory(address(implementation));
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
 
         token.mint(address(this), 300);
         token.approve(address(factory), 300);
-        vault = ECOxVestingVault(
+        vault = ECOxLockupVault(
             factory.createVault(
                 address(token),
                 address(beneficiary),
@@ -49,7 +49,7 @@ contract ECOxVestingVaultTest is Test {
     function testInstantiation() public {
         assertEq(address(vault.token()), address(token));
         assertEq(address(vault.beneficiary()), address(beneficiary));
-        assertEq(vault.vestingPeriods(), 3);
+        assertEq(vault.lockupPeriods(), 3);
 
         assertUintArrayEq(vault.amounts(), makeArray(100, 100, 100));
         assertUintArrayEq(
@@ -60,100 +60,100 @@ contract ECOxVestingVaultTest is Test {
                 initialTimestamp + 3 days
             )
         );
-        assertEq(vault.vestedChunks(), 0);
-        assertEq(vault.vested(), 0);
-        assertEq(vault.vestedOn(initialTimestamp + 1 days), 100);
-        assertEq(vault.vestedOn(initialTimestamp + 2 days), 200);
-        assertEq(vault.vestedOn(initialTimestamp + 3 days), 300);
+        assertEq(vault.lockedupChunks(), 0);
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.lockedupOn(initialTimestamp + 1 days), 100);
+        assertEq(vault.lockedupOn(initialTimestamp + 2 days), 200);
+        assertEq(vault.lockedupOn(initialTimestamp + 3 days), 300);
     }
 
-    function testVestAllThenClaim() public {
-        assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 300);
+    function testLockupAllThenClaim() public {
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.unlockedup(), 300);
         vm.warp(initialTimestamp + 1 days);
-        assertEq(vault.vested(), 100);
-        assertEq(vault.unvested(), 200);
+        assertEq(vault.lockedup(), 100);
+        assertEq(vault.unlockedup(), 200);
         vm.warp(initialTimestamp + 2 days);
-        assertEq(vault.vested(), 200);
-        assertEq(vault.unvested(), 100);
+        assertEq(vault.lockedup(), 200);
+        assertEq(vault.unlockedup(), 100);
         vm.warp(initialTimestamp + 3 days);
-        assertEq(vault.vested(), 300);
-        assertEq(vault.unvested(), 0);
+        assertEq(vault.lockedup(), 300);
+        assertEq(vault.unlockedup(), 0);
 
         assertClaimAmount(300);
 
-        assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 0);
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.unlockedup(), 0);
     }
 
     function testClaimPartial() public {
-        assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 300);
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.unlockedup(), 300);
         vm.warp(initialTimestamp + 1 days);
-        assertEq(vault.vested(), 100);
-        assertEq(vault.unvested(), 200);
+        assertEq(vault.lockedup(), 100);
+        assertEq(vault.unlockedup(), 200);
         assertClaimAmount(100);
-        assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 200);
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.unlockedup(), 200);
 
         vm.warp(initialTimestamp + 2 days);
-        assertEq(vault.vested(), 100);
-        assertEq(vault.unvested(), 100);
+        assertEq(vault.lockedup(), 100);
+        assertEq(vault.unlockedup(), 100);
         assertClaimAmount(100);
-        assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 100);
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.unlockedup(), 100);
 
         vm.warp(initialTimestamp + 3 days);
-        assertEq(vault.vested(), 100);
-        assertEq(vault.unvested(), 0);
+        assertEq(vault.lockedup(), 100);
+        assertEq(vault.unlockedup(), 0);
         assertClaimAmount(100);
-        assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 0);
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.unlockedup(), 0);
     }
 
     function testUnstakePartial() public {
-        assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 300);
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.unlockedup(), 300);
         vm.warp(initialTimestamp + 1 days);
-        assertEq(vault.vested(), 100);
-        assertEq(vault.unvested(), 200);
+        assertEq(vault.lockedup(), 100);
+        assertEq(vault.unlockedup(), 200);
         uint256 unstaked = beneficiary.unstake(vault, 100);
         assertEq(unstaked, 100);
-        assertEq(vault.vested(), 100);
-        assertEq(vault.unvested(), 200);
+        assertEq(vault.lockedup(), 100);
+        assertEq(vault.unlockedup(), 200);
         assertClaimAmount(100);
-        assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 200);
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.unlockedup(), 200);
 
         vm.warp(initialTimestamp + 2 days);
-        assertEq(vault.vested(), 100);
-        assertEq(vault.unvested(), 100);
+        assertEq(vault.lockedup(), 100);
+        assertEq(vault.unlockedup(), 100);
         unstaked = beneficiary.unstake(vault, 100);
         assertEq(unstaked, 100);
-        assertEq(vault.vested(), 100);
-        assertEq(vault.unvested(), 100);
+        assertEq(vault.lockedup(), 100);
+        assertEq(vault.unlockedup(), 100);
         assertClaimAmount(100);
-        assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 100);
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.unlockedup(), 100);
 
         vm.warp(initialTimestamp + 3 days);
-        assertEq(vault.vested(), 100);
-        assertEq(vault.unvested(), 0);
+        assertEq(vault.lockedup(), 100);
+        assertEq(vault.unlockedup(), 0);
         unstaked = beneficiary.unstake(vault, 100);
         assertEq(unstaked, 100);
-        assertEq(vault.vested(), 100);
-        assertEq(vault.unvested(), 0);
+        assertEq(vault.lockedup(), 100);
+        assertEq(vault.unlockedup(), 0);
         assertClaimAmount(100);
-        assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 0);
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.unlockedup(), 0);
     }
 
     function testFailUnstakeMultipleTimes() public {
-        assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 300);
+        assertEq(vault.lockedup(), 0);
+        assertEq(vault.unlockedup(), 300);
         vm.warp(initialTimestamp + 1 days);
-        assertEq(vault.vested(), 100);
-        assertEq(vault.unvested(), 200);
+        assertEq(vault.lockedup(), 100);
+        assertEq(vault.unlockedup(), 200);
         uint256 unstaked = beneficiary.unstake(vault, 100);
         assertEq(unstaked, 100);
         unstaked = beneficiary.unstake(vault, 100);
@@ -176,7 +176,7 @@ contract ECOxVestingVaultTest is Test {
     }
 
     function testDelegateNotBeneficiary() public {
-        vm.expectRevert(IVestingVault.Unauthorized.selector);
+        vm.expectRevert(ILockupVault.Unauthorized.selector);
         vault.delegate(address(this));
     }
 
@@ -212,7 +212,7 @@ contract ECOxVestingVaultTest is Test {
             timestamps[i] = initialTimestamp + ((i + 1) * 86400);
         }
 
-        vault = ECOxVestingVault(
+        vault = ECOxLockupVault(
             factory.createVault(
                 address(token),
                 address(beneficiary),
@@ -228,7 +228,7 @@ contract ECOxVestingVaultTest is Test {
         }
     }
 
-    function testUnstakeNonVested() public {
+    function testUnstakeNonLockedup() public {
         uint256 unstaked = beneficiary.unstake(vault, 100);
         assertEq(unstaked, 100);
     }
@@ -246,15 +246,15 @@ contract ECOxVestingVaultTest is Test {
 
     function testStakeAlreadyStaked(uint256 amount) public {
         if (amount == 0) amount = 1;
-        assertEq(vault.vested(), 0);
-        vm.expectRevert(ECOxVestingVault.InvalidAmount.selector);
+        assertEq(vault.lockedup(), 0);
+        vm.expectRevert(ECOxLockupVault.InvalidAmount.selector);
         beneficiary.stake(vault, amount);
     }
 
     function testStakeNotBeneficiary() public {
         vm.warp(initialTimestamp + 1 days);
-        assertEq(vault.vested(), 100);
-        vm.expectRevert(IVestingVault.Unauthorized.selector);
+        assertEq(vault.lockedup(), 100);
+        vm.expectRevert(ILockupVault.Unauthorized.selector);
         vault.stake(100);
     }
 
@@ -267,7 +267,7 @@ contract ECOxVestingVaultTest is Test {
         } else if (timestamp >= initialTimestamp + 1 days) {
             assertClaimAmount(100);
         } else {
-            assertEq(vault.vested(), 0);
+            assertEq(vault.lockedup(), 0);
         }
     }
 
@@ -277,7 +277,7 @@ contract ECOxVestingVaultTest is Test {
         amounts[1] = 200;
         amounts[2] = 300;
         amounts[3] = 400;
-        vault = ECOxVestingVault(
+        vault = ECOxLockupVault(
             factory.createVault(
                 address(token),
                 address(beneficiary),
@@ -298,7 +298,7 @@ contract ECOxVestingVaultTest is Test {
         timestamps[1] = initialTimestamp + 2 days;
         timestamps[2] = initialTimestamp + 3 days;
         timestamps[3] = initialTimestamp + 4 days;
-        vault = ECOxVestingVault(
+        vault = ECOxLockupVault(
             factory.createVault(
                 address(token),
                 address(beneficiary),
@@ -320,7 +320,7 @@ contract ECOxVestingVaultTest is Test {
     }
 
     function assertClaimAmount(uint256 amount) internal {
-        assertEq(vault.vested(), amount);
+        assertEq(vault.lockedup(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
         uint256 initialVaultBalance = lockup.balanceOf(address(vault)) +
             token.balanceOf(address(vault));

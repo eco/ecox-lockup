@@ -1,13 +1,13 @@
 {
-  "name": "@eco/vesting",
+  "name": "@eco/ecox-staking",
   "version": "0.0.1",
-  "description": "Vesting vault for ECOx",
+  "description": "Staking vault for ECOx",
   "files": [
     "src/**/*.sol"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eco/vesting.git"
+    "url": "git+https://github.com/eco/ecox-staking.git"
   },
   "devDependencies": {
     "prettier": "^2.3.1",

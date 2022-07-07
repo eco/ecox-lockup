@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
-import {VestingVault} from "vesting/VestingVault.sol";
+import {ChunkedLockupVault} from "lockup/ChunkedLockupVault.sol";
+import {LockupVault} from "lockup/LockupVault.sol";
 import {IECOx} from "./interfaces/IECOx.sol";
 import {IECOxLockup} from "./interfaces/IECOxLockup.sol";
 
 /**
- * @notice VestingVault contract for the ECOx currency
+ * @notice LockupVault contract for the ECOx currency
  */
-contract ECOxVestingVault is ChunkedVestingVault {
+contract ECOxLockupVault is ChunkedLockupVault {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     /// @notice Lockup address is invalid
@@ -32,11 +32,11 @@ contract ECOxVestingVault is ChunkedVestingVault {
     address public lockup;
 
     /**
-     * @notice Initializes the vesting vault
+     * @notice Initializes the lockup vault
      * @dev this pulls in the required ERC20 tokens from the sender to setup
      */
     function initialize(address admin) public override initializer {
-        ChunkedVestingVault._initialize(admin);
+        ChunkedLockupVault._initialize(admin);
 
         address _lockup = getECOxLockup();
         if (_lockup == address(0)) revert InvalidLockup();
@@ -47,7 +47,7 @@ contract ECOxVestingVault is ChunkedVestingVault {
     }
 
     /**
-     * @inheritdoc ChunkedVestingVault
+     * @inheritdoc ChunkedLockupVault
      */
     function onClaim(uint256 amount) internal override {
         uint256 balance = token().balanceOf(address(this));
@@ -105,9 +105,9 @@ contract ECOxVestingVault is ChunkedVestingVault {
     }
 
     /**
-     * @notice Unstakes any vested staked ECOx that hasn't already been unstaked
-     * @dev this allows users to vote with unvested tokens while still
-     * being able to claim vested tokens
+     * @notice Unstakes any lockedup staked ECOx that hasn't already been unstaked
+     * @dev this allows users to vote with unlockedup tokens while still
+     * being able to claim lockedup tokens
      * @return The amount of ECOx unstaked
      */
     function unstake(uint256 amount) external returns (uint256) {
@@ -116,9 +116,9 @@ contract ECOxVestingVault is ChunkedVestingVault {
     }
 
     /**
-     * @notice Unstakes any vested staked ECOx that hasn't already been unstaked
-     * @dev this allows users to vote with unvested tokens while still
-     * being able to claim vested tokens
+     * @notice Unstakes any lockedup staked ECOx that hasn't already been unstaked
+     * @dev this allows users to vote with unlockedup tokens while still
+     * being able to claim lockedup tokens
      * @return The amount of ECOx unstaked
      */
     function _unstake(uint256 amount) internal returns (uint256) {
@@ -128,12 +128,12 @@ contract ECOxVestingVault is ChunkedVestingVault {
     }
 
     /**
-     * @inheritdoc VestingVault
+     * @inheritdoc LockupVault
      */
-    function unvested() public view override returns (uint256) {
+    function unlockedup() public view override returns (uint256) {
         return
             IERC20Upgradeable(lockup).balanceOf(address(this)) +
             token().balanceOf(address(this)) -
-            vested();
+            lockedup();
     }
 }
