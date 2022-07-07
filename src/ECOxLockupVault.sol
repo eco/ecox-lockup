@@ -4,15 +4,15 @@ pragma solidity ^0.8.0;
 import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {ChunkedLockupVault} from "lockup/ChunkedLockupVault.sol";
-import {LockupVault} from "lockup/LockupVault.sol";
+import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
+import {VestingVault} from "vesting/VestingVault.sol";
 import {IECOx} from "./interfaces/IECOx.sol";
 import {IECOxLockup} from "./interfaces/IECOxLockup.sol";
 
 /**
- * @notice LockupVault contract for the ECOx currency
+ * @notice VestingVault contract for the ECOx currency
  */
-contract ECOxLockupVault is ChunkedLockupVault {
+contract ECOxLockupVault is ChunkedVestingVault {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     /// @notice Lockup address is invalid
@@ -36,7 +36,7 @@ contract ECOxLockupVault is ChunkedLockupVault {
      * @dev this pulls in the required ERC20 tokens from the sender to setup
      */
     function initialize(address admin) public override initializer {
-        ChunkedLockupVault._initialize(admin);
+        ChunkedVestingVault._initialize(admin);
 
         address _lockup = getECOxLockup();
         if (_lockup == address(0)) revert InvalidLockup();
@@ -47,7 +47,7 @@ contract ECOxLockupVault is ChunkedLockupVault {
     }
 
     /**
-     * @inheritdoc ChunkedLockupVault
+     * @inheritdoc ChunkedVestingVault
      */
     function onClaim(uint256 amount) internal override {
         uint256 balance = token().balanceOf(address(this));
@@ -128,12 +128,12 @@ contract ECOxLockupVault is ChunkedLockupVault {
     }
 
     /**
-     * @inheritdoc LockupVault
+     * @inheritdoc VestingVault
      */
-    function unlockedup() public view override returns (uint256) {
+    function unvested() public view override returns (uint256) {
         return
             IERC20Upgradeable(lockup).balanceOf(address(this)) +
             token().balanceOf(address(this)) -
-            lockedup();
+            vested();
     }
 }
