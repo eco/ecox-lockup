@@ -1,13 +1,13 @@
 {
-  "name": "@eco/ecox-staking",
+  "name": "@eco/lockup",
   "version": "0.0.1",
-  "description": "Staking vault for ECOx",
+  "description": "Lockup vault for ECOx",
   "files": [
     "src/**/*.sol"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eco/ecox-staking.git"
+    "url": "git+https://github.com/eco/ecox-lockup.git"
   },
   "devDependencies": {
     "prettier": "^2.3.1",
