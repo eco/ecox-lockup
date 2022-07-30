@@ -12,7 +12,7 @@ contract MockPolicy {
         keccak256(abi.encodePacked("ERC1820_ACCEPT_MAGIC"));
 
     bytes32 internal constant LOCKUP_HASH =
-        keccak256(abi.encodePacked("ECOxLockup"));
+        keccak256(abi.encodePacked("ECOxStaking"));
 
     constructor(address lockup) {
         ERC1820.setInterfaceImplementer(address(this), LOCKUP_HASH, lockup);
