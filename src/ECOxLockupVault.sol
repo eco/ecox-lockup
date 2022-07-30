@@ -27,7 +27,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
     IERC1820RegistryUpgradeable internal constant ERC1820 =
         IERC1820RegistryUpgradeable(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
     bytes32 internal constant LOCKUP_HASH =
-        keccak256(abi.encodePacked("ECOxLockup"));
+        keccak256(abi.encodePacked("ECOxStaking"));
 
     address public lockup;
 
@@ -43,7 +43,6 @@ contract ECOxLockupVault is ChunkedVestingVault {
         lockup = _lockup;
 
         _stake(token().balanceOf(address(this)));
-        _delegate(beneficiary());
     }
 
     /**
