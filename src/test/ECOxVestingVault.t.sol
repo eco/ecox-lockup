@@ -34,7 +34,7 @@ contract ECOxVestingVaultTest is Test {
             factory.createVault(
                 address(token),
                 address(beneficiary),
-                address(0),
+                address(address(this)),
                 makeArray(100, 100, 100),
                 makeArray(
                     initialTimestamp + 1 days,
@@ -195,6 +195,34 @@ contract ECOxVestingVaultTest is Test {
         assertClaimAmount(100);
         assertEq(token.balanceOf(address(vault)), 0);
         assertEq(lockup.balanceOf(address(vault)), 200);
+    }
+
+    function testClawback() public {
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 300);
+        vm.warp(initialTimestamp + 1 days);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 200);
+
+        vault.clawback();
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 0);
+        assertEq(lockup.balanceOf(address(vault)), 100);
+        assertClaimAmount(100);
+    }
+
+    function testClawbackClaimFirst() public {
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 300);
+        vm.warp(initialTimestamp + 1 days);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 200);
+
+        assertClaimAmount(100);
+        vault.clawback();
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 0);
+        assertEq(lockup.balanceOf(address(vault)), 0);
     }
 
     // note: can parameterize count & amountPerUnlock,
