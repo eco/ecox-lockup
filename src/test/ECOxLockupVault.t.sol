@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.15;
+pragma solidity ^0.8.15;
 
 import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
 import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";

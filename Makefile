@@ -3,7 +3,7 @@ PRIV?=
 # constructor args when deploying factory (implementation address)
 ARGS?=
 # RPC url to deploy to
-RPC?=https://kovan.infura.io/v3/b2eb74fe7b1847f29a35c8bdb93c0e84
+RPC?=https://goerli.infura.io/v3/b2eb74fe7b1847f29a35c8bdb93c0e84
 
 # deploy the lockup vault initial implementation
 implementation:
@@ -13,9 +13,9 @@ implementation-local:
 
 # deploy the lockup vault factory using the deployed implementation
 factory:
-	forge create ECOxLockupVaultFactory --private-key $(PRIV) --constructor-args $(ARGS) --rpc-url $(RPC)
+	forge create ECOxLockupVaultFactory --private-key $(PRIV)  --rpc-url $(RPC) --constructor-args $(ARGS)
 factory-local:
-	forge create ECOxLockupVaultFactory --private-key $(PRIV) --constructor-args $(ARGS) --rpc-url http://localhost:8545 --legacy
+	forge create ECOxLockupVaultFactory --private-key $(PRIV) --rpc-url http://localhost:8545 --legacy --constructor-args $(ARGS)
 
 # clean compilation folders
 clean:
