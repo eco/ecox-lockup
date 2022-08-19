@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 import {ECOxVestingVault} from "../../ECOxVestingVault.sol";
 
 contract MockBeneficiary {

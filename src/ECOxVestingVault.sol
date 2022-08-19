@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {ClawbackVestingVault} from "vesting/ClawbackVestingVault.sol";
 import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
 import {VestingVault} from "vesting/VestingVault.sol";
 import {IECOx} from "./interfaces/IECOx.sol";
@@ -125,6 +126,14 @@ contract ECOxVestingVault is ChunkedVestingVault {
         IECOxLockup(lockup).withdraw(amount);
         emit Unstaked(amount);
         return amount;
+    }
+
+    /**
+     * @inheritdoc ClawbackVestingVault
+     */
+    function clawback() public override onlyOwner {
+        _unstake(unvested());
+        return super.clawback();
     }
 
     /**

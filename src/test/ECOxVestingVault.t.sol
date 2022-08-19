@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
+import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {MockECOx} from "./mock/MockECOx.sol";
@@ -11,7 +12,7 @@ import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
 import {ECOxVestingVaultFactory} from "../ECOxVestingVaultFactory.sol";
 import {ECOxVestingVault} from "../ECOxVestingVault.sol";
 
-contract ECOxVestingVaultTest is Test {
+contract ECOxVestingVaultTest is Test, GasSnapshot {
     ECOxVestingVaultFactory factory;
     ECOxVestingVault vault;
     MockECOx token;
@@ -30,11 +31,12 @@ contract ECOxVestingVaultTest is Test {
 
         token.mint(address(this), 300);
         token.approve(address(factory), 300);
+        snapStart("createVault");
         vault = ECOxVestingVault(
             factory.createVault(
                 address(token),
                 address(beneficiary),
-                address(0),
+                address(address(this)),
                 makeArray(100, 100, 100),
                 makeArray(
                     initialTimestamp + 1 days,
@@ -43,6 +45,7 @@ contract ECOxVestingVaultTest is Test {
                 )
             )
         );
+        snapEnd();
         lockup = MockLockup(vault.lockup());
     }
 
@@ -195,6 +198,38 @@ contract ECOxVestingVaultTest is Test {
         assertClaimAmount(100);
         assertEq(token.balanceOf(address(vault)), 0);
         assertEq(lockup.balanceOf(address(vault)), 200);
+    }
+
+    function testClawback() public {
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 300);
+        vm.warp(initialTimestamp + 1 days);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 200);
+
+        snapStart("clawback");
+        vault.clawback();
+        snapEnd();
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 0);
+        assertEq(lockup.balanceOf(address(vault)), 100);
+        assertClaimAmount(100);
+    }
+
+    function testClawbackClaimFirst() public {
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 300);
+        vm.warp(initialTimestamp + 1 days);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 200);
+
+        snapStart("claim");
+        beneficiary.claim(vault);
+        snapEnd();
+        vault.clawback();
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 0);
+        assertEq(lockup.balanceOf(address(vault)), 0);
     }
 
     // note: can parameterize count & amountPerUnlock,

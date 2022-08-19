@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 interface IECOxLockup {
     function deposit(uint256 _amount) external;
