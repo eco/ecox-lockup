@@ -31,7 +31,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
 
         token.mint(address(this), 300);
         token.approve(address(factory), 300);
-        snapStart("createVault");
+        // snapStart("createVault");
         vault = ECOxLockupVault(
             factory.createVault(
                 address(token),
@@ -45,7 +45,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
                 )
             )
         );
-        snapEnd();
+        // snapEnd();
         lockup = MockLockup(vault.lockup());
     }
 
@@ -207,9 +207,9 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 200);
 
-        snapStart("clawback");
+        // snapStart("clawback");
         vault.clawback();
-        snapEnd();
+        // snapEnd();
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 0);
         assertEq(lockup.balanceOf(address(vault)), 100);
@@ -223,9 +223,9 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 200);
 
-        snapStart("claim");
+        // snapStart("claim");
         beneficiary.claim(vault);
-        snapEnd();
+        // snapEnd();
         vault.clawback();
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 0);
