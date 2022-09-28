@@ -21,14 +21,12 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
      * @param token The ERC20 token to vest over time
      * @param beneficiary The address who will receive tokens over time
      * @param admin The address that can claw back unvested funds
-     * @param amount The total ecoX to be dripped to employee
      */
 
     function createVault(
         address token,
         address beneficiary,
         address admin,
-        uint256 amount, 
         uint256 timestamp
     ) public returns (address) {
         uint256 len = 1;
@@ -36,7 +34,7 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
             token,
             beneficiary,
             len,
-            [amount],
+            [0],
             [timestamp]
         );
         ECOxEmployeeLockup clone = ECOxEmployeeLockup(implementation.clone(data));
