@@ -57,8 +57,6 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         assertEq(vault.timestamps()[0], initialTimestamp + 2 days);
         assertEq(vault.vestedChunks(), 0);
         assertEq(vault.vested(), 0);
-        // assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0); 
-        // assertEq(vault.vestedOn(initialTimestamp + 2 days), 0);
     }
 
     function testAfterTransfer() public {
@@ -72,10 +70,6 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         assertEq(vault.token().balanceOf(address(vault)), 100);
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 100);
-        
-        // assertEq(vault.vested(), 0);
-        // assertEq(vault.unvested(), 200);
-        // assertEq(vault.vestedOn(initialTimestamp + 2 days), 200);
         assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0); 
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 100);
     }
@@ -88,16 +82,4 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
             )
         );
     }
-
-    // function makeArray(
-    //     uint256 a,
-    //     uint256 b,
-    //     uint256 c
-    // ) internal pure returns (uint256[] memory) {
-    //     uint256[] memory result = new uint256[](3);
-    //     result[0] = a;
-    //     result[1] = b;
-    //     result[2] = c;
-    //     return result;
-    // }
 }
