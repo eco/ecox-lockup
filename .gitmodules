@@ -10,12 +10,12 @@
 [submodule "lib/solmate"]
 	path = lib/solmate
 	url = https://github.com/rari-capital/solmate
-[submodule "lib/vesting"]
-	path = lib/vesting
-	url = https://github.com/marktoda/vesting
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "lib/forge-gas-snapshot"]
+[submodule "lib/vesting"]
+	path = lib/vesting
+	url = https://github.com/eco/vesting
+[submodule "eco-forge-gas-snapshot"]
 	path = lib/forge-gas-snapshot
-	url = https://github.com/marktoda/forge-gas-snapshot
+	url = https://github.com/eco/forge-gas-snapshot
