@@ -41,7 +41,6 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
                 address(token),
                 address(beneficiary),
                 address(address(this)),
-                300,
                 initialTimestamp + 2 days
             )
         );
@@ -54,10 +53,10 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         assertEq(address(vault.token()), address(token));
         assertEq(address(vault.beneficiary()), address(beneficiary));
         assertEq(vault.vestingPeriods(), 1);
-        assertEq(vault.amounts()[0], 300);
+        assertEq(vault.amounts()[0], 0);
         assertEq(vault.timestamps()[0], initialTimestamp + 2 days);
         assertEq(vault.vestedChunks(), 0);
-        // assertEq(vault.vested(), 100);
+        assertEq(vault.vested(), 0);
         // assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0); 
         // assertEq(vault.vestedOn(initialTimestamp + 2 days), 0);
     }
@@ -65,14 +64,14 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     function testAfterTransfer() public {
         assertEq(vault.token().balanceOf(address(vault)), 0);
         assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 300);
+        assertEq(vault.unvested(), 0);
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 0);
 
         vault.token().transfer(address(vault), 100);
 
         assertEq(vault.token().balanceOf(address(vault)), 100);
         assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 300);
+        assertEq(vault.unvested(), 100);
         
         // assertEq(vault.vested(), 0);
         // assertEq(vault.unvested(), 200);

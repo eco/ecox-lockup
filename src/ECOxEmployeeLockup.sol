@@ -18,7 +18,7 @@ contract ECOxEmployeeLockup is ECOxVestingVault {
 
     // total to be dripped - what is accessible to employee right now?
     function unvested() public view override returns (uint256) {
-        return this.amounts()[0] - vested();
+        return token().balanceOf(address(this)) - vested();
     }
 
 
