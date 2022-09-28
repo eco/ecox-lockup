@@ -21,6 +21,7 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
      * @param token The ERC20 token to vest over time
      * @param beneficiary The address who will receive tokens over time
      * @param admin The address that can claw back unvested funds
+     * @param amount The total ecoX to be dripped to employee
      */
 
     function createVault(
@@ -45,11 +46,11 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
 
         // IERC20Upgradeable(token).safeTransferFrom(
         //     msg.sender,
-        //     address(this),
-        //     totalTokens
+        //     address(clone),
+        //     amount
         // );
-        // IERC20Upgradeable(token).approve(address(clone), totalTokens);
-        clone.initialize(admin);
+        // IERC20Upgradeable(token).approve(address(clone), amount);
+        // clone.initialize(admin);
         emit VaultCreated(token, beneficiary, address(clone));
         return address(clone);
     }

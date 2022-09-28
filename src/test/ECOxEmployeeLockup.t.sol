@@ -1,16 +1,19 @@
 pragma solidity 0.8.15;
 
-import {console} from "forge-std/console.sol";
-import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
-import {Test} from "forge-std/Test.sol";
-import {Vm} from "forge-std/Vm.sol";
+import {console} from "../../lib/forge-std/src/console.sol";
+import {DSTestPlus} from "../../lib/solmate/src/test/utils/DSTestPlus.sol";
+import {GasSnapshot} from "../../lib/forge-gas-snapshot/src/GasSnapshot.sol";
+import {Test} from "../../lib/forge-std/src/Test.sol";
+import {Vm} from "../../lib/forge-std/src/Vm.sol";
 import {MockECOx} from "./mock/MockECOx.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {MockLockup} from "./mock/MockLockup.sol";
-import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
+import {IVestingVault} from "../../lib/vesting/src/interfaces/IVestingVault.sol";
 import {ECOxEmployeeLockupFactory} from "../ECOxEmployeeLockupFactory.sol";
 import {ECOxEmployeeLockup} from "../ECOxEmployeeLockup.sol";
+import {ECOxVestingVaultFactory} from "../ECOxVestingVaultFactory.sol";
+import {ECOxVestingVault} from "../ECOxVestingVault.sol";
+
 
 contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     ECOxEmployeeLockupFactory factory;
@@ -22,22 +25,23 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
     function setUp() public {
         deployERC1820();
-
+        console.log('whamp');
         token = new MockECOx("Mock", "MOCK", 18);
         ECOxEmployeeLockup implementation = new ECOxEmployeeLockup();
         factory = new ECOxEmployeeLockupFactory(address(implementation));
+
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
 
-        token.mint(address(this), 200);
-        token.approve(address(factory), 200);
-        // // snapStart("createVault");
+        token.mint(address(this), 300);
+        token.approve(address(factory), 300);
+        // snapStart("createVault");
         vault = ECOxEmployeeLockup(
             factory.createVault(
                 address(token),
                 address(beneficiary),
                 address(address(this)),
-                100,
+                300,
                 initialTimestamp + 2 days
             )
         );
@@ -46,27 +50,35 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     }
 
     function testInstantiation() public {
+
         assertEq(address(vault.token()), address(token));
         assertEq(address(vault.beneficiary()), address(beneficiary));
         assertEq(vault.vestingPeriods(), 1);
-        assertEq(vault.amounts()[0], 100);
+        assertEq(vault.amounts()[0], 300);
         assertEq(vault.timestamps()[0], initialTimestamp + 2 days);
         assertEq(vault.vestedChunks(), 0);
-        assertEq(vault.vested(), 0);
-        assertEq(vault.vestedOn(initialTimestamp + 23 hours), 0); 
-        assertEq(vault.vestedOn(initialTimestamp + 1 days), 100); 
+        // assertEq(vault.vested(), 100);
+        // assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0); 
+        // assertEq(vault.vestedOn(initialTimestamp + 2 days), 0);
     }
 
     function testAfterTransfer() public {
-        assertEq(vault.token().balanceOf(address(vault)), 100);
+        assertEq(vault.token().balanceOf(address(vault)), 0);
         assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 100);
+        assertEq(vault.unvested(), 300);
+        assertEq(vault.vestedOn(initialTimestamp + 2 days), 0);
 
         vault.token().transfer(address(vault), 100);
-        
+
+        assertEq(vault.token().balanceOf(address(vault)), 100);
         assertEq(vault.vested(), 0);
-        assertEq(vault.unvested(), 200);
-        assertEq(vault.vestedOn(initialTimestamp + 2 days), 200);
+        assertEq(vault.unvested(), 300);
+        
+        // assertEq(vault.vested(), 0);
+        // assertEq(vault.unvested(), 200);
+        // assertEq(vault.vestedOn(initialTimestamp + 2 days), 200);
+        assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0); 
+        assertEq(vault.vestedOn(initialTimestamp + 2 days), 100);
     }
 
     function deployERC1820() internal {
@@ -77,4 +89,16 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
             )
         );
     }
+
+    // function makeArray(
+    //     uint256 a,
+    //     uint256 b,
+    //     uint256 c
+    // ) internal pure returns (uint256[] memory) {
+    //     uint256[] memory result = new uint256[](3);
+    //     result[0] = a;
+    //     result[1] = b;
+    //     result[2] = c;
+    //     return result;
+    // }
 }
