@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.15;
+pragma solidity ^0.8.0;
 
-import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
+import {IERC1820RegistryUpgradeable} from "../../../lib/openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
 import {IECOx} from "../../interfaces/IECOx.sol";
 
 contract MockPolicy {
