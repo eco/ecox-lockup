@@ -2,7 +2,8 @@ pragma solidity ^0.8.0;
 
 import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IVestingVaultFactory} from "vesting/interfaces/IVestingVaultFactory.sol";
 import {ECOxEmployeeLockup} from "./ECOxEmployeeLockup.sol";
 
@@ -23,20 +24,12 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
      * @param admin The address that can claw back unvested funds
      */
 
-    function createVault(
-        address token,
-        address beneficiary,
-        address admin,
-        uint256 timestamp
-    ) public returns (address) {
+    function createVault(address token, address beneficiary, address admin, uint256 timestamp)
+        public
+        returns (address)
+    {
         uint256 len = 1;
-        bytes memory data = abi.encodePacked(
-            token,
-            beneficiary,
-            len,
-            [0],
-            [timestamp]
-        );
+        bytes memory data = abi.encodePacked(token, beneficiary, len, [0], [timestamp]);
         ECOxEmployeeLockup clone = ECOxEmployeeLockup(implementation.clone(data));
 
         //

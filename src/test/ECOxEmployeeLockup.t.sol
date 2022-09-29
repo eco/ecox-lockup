@@ -14,7 +14,6 @@ import {ECOxEmployeeLockup} from "../ECOxEmployeeLockup.sol";
 import {ECOxLockupVaultFactory} from "../ECOxLockupVaultFactory.sol";
 import {ECOxLockupVault} from "../ECOxLockupVault.sol";
 
-
 contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     ECOxEmployeeLockupFactory factory;
     ECOxEmployeeLockup vault;
@@ -25,7 +24,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
     function setUp() public {
         deployERC1820();
-        console.log('whamp');
+        console.log("whamp");
         token = new MockECOx("Mock", "MOCK", 18);
         ECOxEmployeeLockup implementation = new ECOxEmployeeLockup();
         factory = new ECOxEmployeeLockupFactory(address(implementation));
@@ -37,19 +36,13 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         token.approve(address(factory), 300);
         // snapStart("createVault");
         vault = ECOxEmployeeLockup(
-            factory.createVault(
-                address(token),
-                address(beneficiary),
-                address(address(this)),
-                initialTimestamp + 2 days
-            )
+            factory.createVault(address(token), address(beneficiary), address(address(this)), initialTimestamp + 2 days)
         );
         // // snapEnd();
         lockup = MockLockup(vault.lockup());
     }
 
     function testInstantiation() public {
-
         assertEq(address(vault.token()), address(token));
         assertEq(address(vault.beneficiary()), address(beneficiary));
         assertEq(vault.vestingPeriods(), 1);
@@ -70,7 +63,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         assertEq(vault.token().balanceOf(address(vault)), 100);
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 100);
-        assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0); 
+        assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0);
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 100);
     }
 

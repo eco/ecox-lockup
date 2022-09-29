@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IVestingVaultFactory} from "vesting/interfaces/IVestingVaultFactory.sol";
 import {ECOxLockupVault} from "./ECOxLockupVault.sol";
 
@@ -32,21 +33,11 @@ contract ECOxLockupVaultFactory is IVestingVaultFactory {
     ) public returns (address) {
         if (amounts.length != timestamps.length) revert InvalidParams();
 
-        bytes memory data = abi.encodePacked(
-            token,
-            beneficiary,
-            amounts.length,
-            amounts,
-            timestamps
-        );
+        bytes memory data = abi.encodePacked(token, beneficiary, amounts.length, amounts, timestamps);
         ECOxLockupVault clone = ECOxLockupVault(implementation.clone(data));
 
         uint256 totalTokens = clone.vestedOn(type(uint256).max);
-        IERC20Upgradeable(token).safeTransferFrom(
-            msg.sender,
-            address(this),
-            totalTokens
-        );
+        IERC20Upgradeable(token).safeTransferFrom(msg.sender, address(this), totalTokens);
         IERC20Upgradeable(token).approve(address(clone), totalTokens);
         clone.initialize(admin);
         emit VaultCreated(token, beneficiary, address(clone));
