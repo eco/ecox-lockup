@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {IERC1820RegistryUpgradeable} from "../lib/openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
-import {IERC20Upgradeable} from "../lib/openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "../lib/openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {ClawbackVestingVault} from "../lib/vesting/src/ClawbackVestingVault.sol";
-import {ChunkedVestingVault} from "../lib/vesting/src/ChunkedVestingVault.sol";
-import {VestingVault} from "../lib/vesting/src/VestingVault.sol";
+import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
+import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {ClawbackVestingVault} from "vesting/ClawbackVestingVault.sol";
+import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
+import {VestingVault} from "vesting/VestingVault.sol";
 import {IECOx} from "./interfaces/IECOx.sol";
 import {IECOxLockup} from "./interfaces/IECOxLockup.sol";
 

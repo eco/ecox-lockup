@@ -1,18 +1,18 @@
 pragma solidity 0.8.15;
 
-import {console} from "../../lib/forge-std/src/console.sol";
-import {DSTestPlus} from "../../lib/solmate/src/test/utils/DSTestPlus.sol";
-import {GasSnapshot} from "../../lib/forge-gas-snapshot/src/GasSnapshot.sol";
-import {Test} from "../../lib/forge-std/src/Test.sol";
-import {Vm} from "../../lib/forge-std/src/Vm.sol";
+import {console} from "forge-std/console.sol";
+import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
+import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
+import {Test} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
+import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
 import {MockECOx} from "./mock/MockECOx.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {MockLockup} from "./mock/MockLockup.sol";
-import {IVestingVault} from "../../lib/vesting/src/interfaces/IVestingVault.sol";
 import {ECOxEmployeeLockupFactory} from "../ECOxEmployeeLockupFactory.sol";
 import {ECOxEmployeeLockup} from "../ECOxEmployeeLockup.sol";
-import {ECOxVestingVaultFactory} from "../ECOxVestingVaultFactory.sol";
-import {ECOxVestingVault} from "../ECOxVestingVault.sol";
+import {ECOxLockupVaultFactory} from "../ECOxLockupVaultFactory.sol";
+import {ECOxLockupVault} from "../ECOxLockupVault.sol";
 
 
 contract ECOxEmployeeLockupTest is Test, GasSnapshot {

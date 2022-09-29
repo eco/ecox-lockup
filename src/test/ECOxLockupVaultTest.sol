@@ -32,7 +32,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         token.mint(address(this), 300);
         token.approve(address(factory), 300);
         snapStart("createVault");
-        vault = ECOxVestingVault(
+        vault = ECOxLockupVault(
             factory.createVault(
                 address(token),
                 address(beneficiary),

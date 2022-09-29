@@ -1,9 +1,9 @@
 pragma solidity ^0.8.0;
 
-import {ClonesWithImmutableArgs} from "../lib/clones-with-immutable-args/src/ClonesWithImmutableArgs.sol";
-import {IERC20Upgradeable} from "../lib/openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "../lib/openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {IVestingVaultFactory} from "../lib/vesting/src/interfaces/IVestingVaultFactory.sol";
+import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
+import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IVestingVaultFactory} from "vesting/interfaces/IVestingVaultFactory.sol";
 import {ECOxEmployeeLockup} from "./ECOxEmployeeLockup.sol";
 
 contract ECOxEmployeeLockupFactory is IVestingVaultFactory {

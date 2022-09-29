@@ -1,9 +1,9 @@
 pragma solidity 0.8.15;
 
-import {ECOxVestingVault} from "./ECOxVestingVault.sol";
+import {ECOxLockupVault} from "./ECOxLockupVault.sol";
 import {IECOx} from "./interfaces/IECOx.sol";
 
-contract ECOxEmployeeLockup is ECOxVestingVault {
+contract ECOxEmployeeLockup is ECOxLockupVault {
 
     function vestedOn(uint256 timestamp) public override view returns (uint256 amount){
         return timestamp >= this.timestamps()[0] ? token().balanceOf(address(this)) : 0;
