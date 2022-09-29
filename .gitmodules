@@ -18,4 +18,4 @@
 	url = https://github.com/marktoda/forge-gas-snapshot
 [submodule "lib/vesting"]
 	path = lib/vesting
-	url = https://github.com/eco/vesting
+	url = https://github.com/marktoda/vesting
