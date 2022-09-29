@@ -41,7 +41,7 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
         //     amount
         // );
         // IERC20Upgradeable(token).approve(address(clone), amount);
-        // clone.initialize(admin);
+        clone.initialize(admin);
         emit VaultCreated(token, beneficiary, address(clone));
         return address(clone);
     }

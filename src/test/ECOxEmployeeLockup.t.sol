@@ -6,6 +6,7 @@ import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
+import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {MockECOx} from "./mock/MockECOx.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {MockLockup} from "./mock/MockLockup.sol";
@@ -24,7 +25,6 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
     function setUp() public {
         deployERC1820();
-        console.log("whamp");
         token = new MockECOx("Mock", "MOCK", 18);
         ECOxEmployeeLockup implementation = new ECOxEmployeeLockup();
         factory = new ECOxEmployeeLockupFactory(address(implementation));
@@ -34,11 +34,11 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
         token.mint(address(this), 300);
         token.approve(address(factory), 300);
-        // snapStart("createVault");
+        snapStart("createEmployeeVault");
         vault = ECOxEmployeeLockup(
             factory.createVault(address(token), address(beneficiary), address(address(this)), initialTimestamp + 2 days)
         );
-        // // snapEnd();
+        snapEnd();
         lockup = MockLockup(vault.lockup());
     }
 
@@ -65,6 +65,15 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         assertEq(vault.unvested(), 100);
         assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0);
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 100);
+
+        beneficiary.stake(vault, 25);
+        vault.token().transfer(address(vault), 50);
+        
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 150);
+        assertEq(IERC20Upgradeable(vault.lockup()).balanceOf(address(vault)), 25);
+        assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0);
+        assertEq(vault.vestedOn(initialTimestamp + 2 days), 150);
     }
 
     function deployERC1820() internal {

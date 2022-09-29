@@ -140,7 +140,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
     /**
      * @inheritdoc VestingVault
      */
-    function unvested() public view virtual override returns (uint256) {
+    function unvested() public view override returns (uint256) {
         return IERC20Upgradeable(lockup).balanceOf(address(this)) + token().balanceOf(address(this)) - vested();
     }
 }
