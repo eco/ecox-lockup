@@ -9,12 +9,12 @@ import {MockECOx} from "./mock/MockECOx.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {MockLockup} from "./mock/MockLockup.sol";
 import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
-import {ECOxVestingVaultFactory} from "../ECOxVestingVaultFactory.sol";
-import {ECOxVestingVault} from "../ECOxVestingVault.sol";
+import {ECOxLockupVaultFactory} from "../ECOxLockupVaultFactory.sol";
+import {ECOxLockupVault} from "../ECOxLockupVault.sol";
 
-contract ECOxVestingVaultTest is Test, GasSnapshot {
-    ECOxVestingVaultFactory factory;
-    ECOxVestingVault vault;
+contract ECOxLockupVaultTest is Test, GasSnapshot {
+    ECOxLockupVaultFactory factory;
+    ECOxLockupVault vault;
     MockECOx token;
     MockLockup lockup;
     MockBeneficiary beneficiary;
@@ -24,15 +24,15 @@ contract ECOxVestingVaultTest is Test, GasSnapshot {
         deployERC1820();
 
         token = new MockECOx("Mock", "MOCK", 18);
-        ECOxVestingVault implementation = new ECOxVestingVault();
-        factory = new ECOxVestingVaultFactory(address(implementation));
+        ECOxLockupVault implementation = new ECOxLockupVault();
+        factory = new ECOxLockupVaultFactory(address(implementation));
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
 
         token.mint(address(this), 300);
         token.approve(address(factory), 300);
-        snapStart("createVault");
-        vault = ECOxVestingVault(
+        // snapStart("createVault");
+        vault = ECOxLockupVault(
             factory.createVault(
                 address(token),
                 address(beneficiary),
@@ -45,7 +45,7 @@ contract ECOxVestingVaultTest is Test, GasSnapshot {
                 )
             )
         );
-        snapEnd();
+        // snapEnd();
         lockup = MockLockup(vault.lockup());
     }
 
@@ -70,7 +70,7 @@ contract ECOxVestingVaultTest is Test, GasSnapshot {
         assertEq(vault.vestedOn(initialTimestamp + 3 days), 300);
     }
 
-    function testVestAllThenClaim() public {
+    function testLockupAllThenClaim() public {
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 300);
         vm.warp(initialTimestamp + 1 days);
@@ -207,9 +207,9 @@ contract ECOxVestingVaultTest is Test, GasSnapshot {
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 200);
 
-        snapStart("clawback");
+        // snapStart("clawback");
         vault.clawback();
-        snapEnd();
+        // snapEnd();
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 0);
         assertEq(lockup.balanceOf(address(vault)), 100);
@@ -223,9 +223,9 @@ contract ECOxVestingVaultTest is Test, GasSnapshot {
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 200);
 
-        snapStart("claim");
+        // snapStart("claim");
         beneficiary.claim(vault);
-        snapEnd();
+        // snapEnd();
         vault.clawback();
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 0);
@@ -247,7 +247,7 @@ contract ECOxVestingVaultTest is Test, GasSnapshot {
             timestamps[i] = initialTimestamp + ((i + 1) * 86400);
         }
 
-        vault = ECOxVestingVault(
+        vault = ECOxLockupVault(
             factory.createVault(
                 address(token),
                 address(beneficiary),
@@ -263,7 +263,7 @@ contract ECOxVestingVaultTest is Test, GasSnapshot {
         }
     }
 
-    function testUnstakeNonVested() public {
+    function testUnstakeNonLockedup() public {
         uint256 unstaked = beneficiary.unstake(vault, 100);
         assertEq(unstaked, 100);
     }
@@ -282,7 +282,7 @@ contract ECOxVestingVaultTest is Test, GasSnapshot {
     function testStakeAlreadyStaked(uint256 amount) public {
         if (amount == 0) amount = 1;
         assertEq(vault.vested(), 0);
-        vm.expectRevert(ECOxVestingVault.InvalidAmount.selector);
+        vm.expectRevert(ECOxLockupVault.InvalidAmount.selector);
         beneficiary.stake(vault, amount);
     }
 
@@ -312,7 +312,7 @@ contract ECOxVestingVaultTest is Test, GasSnapshot {
         amounts[1] = 200;
         amounts[2] = 300;
         amounts[3] = 400;
-        vault = ECOxVestingVault(
+        vault = ECOxLockupVault(
             factory.createVault(
                 address(token),
                 address(beneficiary),
@@ -333,7 +333,7 @@ contract ECOxVestingVaultTest is Test, GasSnapshot {
         timestamps[1] = initialTimestamp + 2 days;
         timestamps[2] = initialTimestamp + 3 days;
         timestamps[3] = initialTimestamp + 4 days;
-        vault = ECOxVestingVault(
+        vault = ECOxLockupVault(
             factory.createVault(
                 address(token),
                 address(beneficiary),

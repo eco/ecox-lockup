@@ -5,9 +5,9 @@ import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmu
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IVestingVaultFactory} from "vesting/interfaces/IVestingVaultFactory.sol";
-import {ECOxVestingVault} from "./ECOxVestingVault.sol";
+import {ECOxLockupVault} from "./ECOxLockupVault.sol";
 
-contract ECOxVestingVaultFactory is IVestingVaultFactory {
+contract ECOxLockupVaultFactory is IVestingVaultFactory {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using ClonesWithImmutableArgs for address;
 
@@ -39,7 +39,7 @@ contract ECOxVestingVaultFactory is IVestingVaultFactory {
             amounts,
             timestamps
         );
-        ECOxVestingVault clone = ECOxVestingVault(implementation.clone(data));
+        ECOxLockupVault clone = ECOxLockupVault(implementation.clone(data));
 
         uint256 totalTokens = clone.vestedOn(type(uint256).max);
         IERC20Upgradeable(token).safeTransferFrom(

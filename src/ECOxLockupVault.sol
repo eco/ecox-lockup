@@ -13,7 +13,7 @@ import {IECOxLockup} from "./interfaces/IECOxLockup.sol";
 /**
  * @notice VestingVault contract for the ECOx currency
  */
-contract ECOxVestingVault is ChunkedVestingVault {
+contract ECOxLockupVault is ChunkedVestingVault {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     /// @notice Lockup address is invalid
@@ -33,7 +33,7 @@ contract ECOxVestingVault is ChunkedVestingVault {
     address public lockup;
 
     /**
-     * @notice Initializes the vesting vault
+     * @notice Initializes the lockup vault
      * @dev this pulls in the required ERC20 tokens from the sender to setup
      */
     function initialize(address admin) public override initializer {
@@ -106,9 +106,9 @@ contract ECOxVestingVault is ChunkedVestingVault {
     }
 
     /**
-     * @notice Unstakes any vested staked ECOx that hasn't already been unstaked
-     * @dev this allows users to vote with unvested tokens while still
-     * being able to claim vested tokens
+     * @notice Unstakes any lockedup staked ECOx that hasn't already been unstaked
+     * @dev this allows users to vote with released tokens while still
+     * being able to claim lockedup tokens
      * @return The amount of ECOx unstaked
      */
     function unstake(uint256 amount) external returns (uint256) {
@@ -117,9 +117,9 @@ contract ECOxVestingVault is ChunkedVestingVault {
     }
 
     /**
-     * @notice Unstakes any vested staked ECOx that hasn't already been unstaked
-     * @dev this allows users to vote with unvested tokens while still
-     * being able to claim vested tokens
+     * @notice Unstakes any lockedup staked ECOx that hasn't already been unstaked
+     * @dev this allows users to vote with released tokens while still
+     * being able to claim lockedup tokens
      * @return The amount of ECOx unstaked
      */
     function _unstake(uint256 amount) internal returns (uint256) {
