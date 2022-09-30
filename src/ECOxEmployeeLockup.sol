@@ -6,6 +6,6 @@ import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/to
 
 contract ECOxEmployeeLockup is ECOxLockupVault {
     function vestedOn(uint256 timestamp) public view override returns (uint256 amount) {
-        return timestamp >= this.timestamps()[0] ? token().balanceOf(address(this)) + IERC20Upgradeable(lockup).balanceOf(address(this)): 0;
+        return timestamp >= this.timestamps()[0] ? token().balanceOf(address(this)) + IERC20Upgradeable(lockup).balanceOf(address(this)) : 0;
     }
 }

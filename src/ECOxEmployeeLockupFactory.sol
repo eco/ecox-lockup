@@ -32,15 +32,6 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
         bytes memory data = abi.encodePacked(token, beneficiary, len, [0], [timestamp]);
         ECOxEmployeeLockup clone = ECOxEmployeeLockup(implementation.clone(data));
 
-        //
-        // uint256 totalTokens = clone.vestedOn(type(uint256).max);
-
-        // IERC20Upgradeable(token).safeTransferFrom(
-        //     msg.sender,
-        //     address(clone),
-        //     amount
-        // );
-        // IERC20Upgradeable(token).approve(address(clone), amount);
         clone.initialize(admin);
         emit VaultCreated(token, beneficiary, address(clone));
         return address(clone);
