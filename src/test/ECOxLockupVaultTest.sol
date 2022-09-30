@@ -38,11 +38,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
                 address(beneficiary),
                 address(address(this)),
                 makeArray(100, 100, 100),
-                makeArray(
-                    initialTimestamp + 1 days,
-                    initialTimestamp + 2 days,
-                    initialTimestamp + 3 days
-                )
+                makeArray(initialTimestamp + 1 days, initialTimestamp + 2 days, initialTimestamp + 3 days)
             )
         );
         snapEnd();
@@ -57,11 +53,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertUintArrayEq(vault.amounts(), makeArray(100, 100, 100));
         assertUintArrayEq(
             vault.timestamps(),
-            makeArray(
-                initialTimestamp + 1 days,
-                initialTimestamp + 2 days,
-                initialTimestamp + 3 days
-            )
+            makeArray(initialTimestamp + 1 days, initialTimestamp + 2 days, initialTimestamp + 3 days)
         );
         assertEq(vault.vestedChunks(), 0);
         assertEq(vault.vested(), 0);
@@ -247,15 +239,8 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
             timestamps[i] = initialTimestamp + ((i + 1) * 86400);
         }
 
-        vault = ECOxLockupVault(
-            factory.createVault(
-                address(token),
-                address(beneficiary),
-                address(0),
-                amounts,
-                timestamps
-            )
-        );
+        vault =
+            ECOxLockupVault(factory.createVault(address(token), address(beneficiary), address(0), amounts, timestamps));
 
         for (uint256 i = 0; i < count; i++) {
             vm.warp(initialTimestamp + ((i + 1) * 86400));
@@ -318,11 +303,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
                 address(beneficiary),
                 address(0),
                 amounts,
-                makeArray(
-                    initialTimestamp + 1 days,
-                    initialTimestamp + 2 days,
-                    initialTimestamp + 3 days
-                )
+                makeArray(initialTimestamp + 1 days, initialTimestamp + 2 days, initialTimestamp + 3 days)
             )
         );
     }
@@ -334,13 +315,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         timestamps[2] = initialTimestamp + 3 days;
         timestamps[3] = initialTimestamp + 4 days;
         vault = ECOxLockupVault(
-            factory.createVault(
-                address(token),
-                address(beneficiary),
-                address(0),
-                makeArray(100, 100, 100),
-                timestamps
-            )
+            factory.createVault(address(token), address(beneficiary), address(0), makeArray(100, 100, 100), timestamps)
         );
     }
 
@@ -357,24 +332,13 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
-        uint256 initialVaultBalance = lockup.balanceOf(address(vault)) +
-            token.balanceOf(address(vault));
+        uint256 initialVaultBalance = lockup.balanceOf(address(vault)) + token.balanceOf(address(vault));
         beneficiary.claim(vault);
-        assertEq(
-            initialBalance + amount,
-            token.balanceOf(address(beneficiary))
-        );
-        assertEq(
-            initialVaultBalance - amount,
-            lockup.balanceOf(address(vault))
-        );
+        assertEq(initialBalance + amount, token.balanceOf(address(beneficiary)));
+        assertEq(initialVaultBalance - amount, lockup.balanceOf(address(vault)));
     }
 
-    function makeArray(
-        uint256 a,
-        uint256 b,
-        uint256 c
-    ) internal pure returns (uint256[] memory) {
+    function makeArray(uint256 a, uint256 b, uint256 c) internal pure returns (uint256[] memory) {
         uint256[] memory result = new uint256[](3);
         result[0] = a;
         result[1] = b;

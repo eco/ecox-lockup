@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.15;
+pragma solidity ^0.8.0;
 
-import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
+import {IERC1820RegistryUpgradeable} from
+    "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {ClawbackVestingVault} from "vesting/ClawbackVestingVault.sol";
 import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
 import {VestingVault} from "vesting/VestingVault.sol";
@@ -27,8 +29,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
 
     IERC1820RegistryUpgradeable internal constant ERC1820 =
         IERC1820RegistryUpgradeable(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-    bytes32 internal constant LOCKUP_HASH =
-        keccak256(abi.encodePacked("ECOxLockup"));
+    bytes32 internal constant LOCKUP_HASH = keccak256(abi.encodePacked("ECOxLockup"));
 
     address public lockup;
 
@@ -36,7 +37,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @notice Initializes the lockup vault
      * @dev this pulls in the required ERC20 tokens from the sender to setup
      */
-    function initialize(address admin) public override initializer {
+    function initialize(address admin) public virtual override initializer {
         ChunkedVestingVault._initialize(admin);
 
         address _lockup = getECOxLockup();
@@ -140,9 +141,6 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @inheritdoc VestingVault
      */
     function unvested() public view override returns (uint256) {
-        return
-            IERC20Upgradeable(lockup).balanceOf(address(this)) +
-            token().balanceOf(address(this)) -
-            vested();
+        return IERC20Upgradeable(lockup).balanceOf(address(this)) + token().balanceOf(address(this)) - vested();
     }
 }
