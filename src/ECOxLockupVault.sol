@@ -51,7 +51,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
     /**
      * @inheritdoc ChunkedVestingVault
      */
-    function onClaim(uint256 amount) internal override {
+    function onClaim(uint256 amount) internal virtual override {
         uint256 balance = token().balanceOf(address(this));
         if (balance < amount) {
             _unstake(amount - balance);
