@@ -1,6 +1,5 @@
 pragma solidity 0.8.15;
 
-import {console} from "forge-std/console.sol";
 import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
 import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {Test} from "forge-std/Test.sol";
@@ -12,8 +11,6 @@ import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {MockLockup} from "./mock/MockLockup.sol";
 import {ECOxEmployeeLockupFactory} from "../ECOxEmployeeLockupFactory.sol";
 import {ECOxEmployeeLockup} from "../ECOxEmployeeLockup.sol";
-import {ECOxLockupVaultFactory} from "../ECOxLockupVaultFactory.sol";
-import {ECOxLockupVault} from "../ECOxLockupVault.sol";
 
 contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     ECOxEmployeeLockupFactory factory;
@@ -58,7 +55,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         assertEq(vault.unvested(), 0);
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 0);
 
-        vault.token().transfer(address(vault), 100);
+        token.transfer(address(vault), 100);
 
         assertEq(vault.token().balanceOf(address(vault)), 100);
         assertEq(vault.vested(), 0);
@@ -67,18 +64,19 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 100);
 
         beneficiary.stake(vault, 25);
-        vault.token().transfer(address(vault), 50);
+        token.transfer(address(vault), 50);
         
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 150);
-        assertEq(IERC20Upgradeable(vault.lockup()).balanceOf(address(vault)), 25);
+        assertEq(IERC20Upgradeable(lockup).balanceOf(address(vault)), 25);
         assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0);
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 150);
     }
 
     function testClaimNoStaking() public {
         assertEq(vault.token().balanceOf(address(vault)), 0);
-        vault.token().transfer(address(vault), 100);
+        token.transfer(address(vault), 100);
+
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 100);
 
         vm.warp(initialTimestamp + 2 days);
@@ -87,7 +85,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
     function testClaimWithStaking() public {
         assertEq(vault.token().balanceOf(address(vault)), 0);
-        vault.token().transfer(address(vault), 100);
+        token.transfer(address(vault), 100);
         beneficiary.stake(vault, 25);
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 100);
 
@@ -103,7 +101,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
             )
         );
     }
-    
+
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
