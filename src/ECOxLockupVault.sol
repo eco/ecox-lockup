@@ -29,7 +29,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
 
     IERC1820RegistryUpgradeable internal constant ERC1820 =
         IERC1820RegistryUpgradeable(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-    bytes32 internal constant LOCKUP_HASH = keccak256(abi.encodePacked("ECOxLockup"));
+    bytes32 internal constant LOCKUP_HASH = keccak256(abi.encodePacked("ECOxStaking"));
 
     address public lockup;
 
@@ -40,7 +40,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
     function initialize(address admin) public virtual override initializer {
         ChunkedVestingVault._initialize(admin);
 
-        address _lockup = getECOxLockup();
+        address _lockup = getECOxStaking();
         if (_lockup == address(0)) revert InvalidLockup();
         lockup = _lockup;
 
@@ -60,10 +60,10 @@ contract ECOxLockupVault is ChunkedVestingVault {
     }
 
     /**
-     * @notice Fetches the ECOxLockup contract from ERC1820Registry
+     * @notice Fetches the ECOxStaking contract from ERC1820Registry
      * @return The ECOx Lockup contract
      */
-    function getECOxLockup() internal returns (address) {
+    function getECOxStaking() internal returns (address) {
         address policy = IECOx(address(token())).policy();
         return ERC1820.getInterfaceImplementer(policy, LOCKUP_HASH);
     }
