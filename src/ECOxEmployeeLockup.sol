@@ -8,4 +8,11 @@ contract ECOxEmployeeLockup is ECOxLockupVault {
     function vestedOn(uint256 timestamp) public view override returns (uint256 amount) {
         return timestamp >= this.timestamps()[0] ? token().balanceOf(address(this)) + IERC20Upgradeable(lockup).balanceOf(address(this)) : 0;
     }
+
+    function onClaim(uint256 amount) internal override {
+        uint256 balance = token().balanceOf(address(this));
+        if (balance < amount) {
+            _unstake(amount - balance);
+        }
+    }
 }
