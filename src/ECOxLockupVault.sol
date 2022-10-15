@@ -133,7 +133,9 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @inheritdoc ClawbackVestingVault
      */
     function clawback() public override onlyOwner {
-        _unstake(unvested());
+        uint256 unstaked = IERC20Upgradeable(lockup).balanceOf(address(this));
+        uint256 unvested = unvested();
+        _unstake(unstaked < unvested ? unstaked : unvested);
         return super.clawback();
     }
 

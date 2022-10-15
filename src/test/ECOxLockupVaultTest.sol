@@ -329,6 +329,39 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertClaimAmount(0);
     }
 
+    function testPreventAdminClawBackByUnstaking() public {
+        assertEq(lockup.balanceOf(address(vault)), 300);
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 300);
+        // @audit-info let user unstake any amount, will stop admin clawback from working
+        // @audit-info without this section the test will pass
+        beneficiary.unstake(vault, 10);
+        assertEq(token.balanceOf(address(vault)), 10);
+        assertEq(vault.unvested(), 300);
+
+        vault.clawback(); //@audit-info will revert with underflow
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(lockup.balanceOf(address(vault)), 0);
+    }
+
+    //audit-issue - user can stop admin clawback function by inflating vault token balance
+    function testPreventAdminClawBackByTransfer() public {
+        assertEq(lockup.balanceOf(address(vault)), 300);
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 300);
+        //@audit-info send 1 extra token to the vault
+        //@audit-info without this section the test will pass
+        token.mint(address(vault), 1);
+        assertEq(token.balanceOf(address(vault)), 1);
+        assertEq(vault.unvested(), 301);
+    
+        vault.clawback(); //@audit-info will revert with underflow
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(lockup.balanceOf(address(vault)), 0);
+    }
+
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
