@@ -329,6 +329,36 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertClaimAmount(0);
     }
 
+    function testPreventAdminClawBackByUnstaking() public {
+        assertEq(lockup.balanceOf(address(vault)), 300);
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 300);
+
+        beneficiary.unstake(vault, 10);
+        assertEq(token.balanceOf(address(vault)), 10);
+        assertEq(vault.unvested(), 300);
+
+        vault.clawback();
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(lockup.balanceOf(address(vault)), 0);
+    }
+
+    function testPreventAdminClawBackByTransfer() public {
+        assertEq(lockup.balanceOf(address(vault)), 300);
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 300);
+
+        token.mint(address(vault), 1);
+        assertEq(token.balanceOf(address(vault)), 1);
+        assertEq(vault.unvested(), 301);
+    
+        vault.clawback();
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(lockup.balanceOf(address(vault)), 0);
+    }
+
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
