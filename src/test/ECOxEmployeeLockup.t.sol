@@ -93,6 +93,15 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         assertClaimAmount(100);
     }
 
+    function testGriefing() public {
+        token.transfer(address(vault), 100);
+        vm.warp(initialTimestamp + 2 days);
+        token.mint(address(vault), 1);
+
+        beneficiary.claim(vault);
+        assertEq(token.balanceOf(address(beneficiary)), 101);
+    }
+
     function deployERC1820() internal {
         vm.etch(
             address(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24),
