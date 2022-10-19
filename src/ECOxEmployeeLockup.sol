@@ -13,10 +13,19 @@ import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/to
  */
 contract ECOxEmployeeLockup is ECOxLockupVault {
 
+    /**
+     * @notice calculates tokens vested at a given timestamp
+     * @param timestamp The time for which vested tokens are being calculated
+     * @return amount of tokens vested at timestamp
+     */
     function vestedOn(uint256 timestamp) public view override returns (uint256 amount) {
         return timestamp >= this.timestampAtIndex(0) ? token().balanceOf(address(this)) + IERC20Upgradeable(lockup).balanceOf(address(this)) : 0;
     }
 
+    /**
+     * @notice helper function unstaking required tokens before they are claimed
+     * @param amount amount of vested tokens being claimed
+     */
     function onClaim(uint256 amount) internal override {
         uint256 balance = token().balanceOf(address(this));
         if (balance < amount) {
