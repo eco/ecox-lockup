@@ -44,11 +44,17 @@ Arguments:
 
 Stakes ECOx in the lockup contract
 
+##### Security Notes
+ - reverts when called by not beneficiary
+
 #### delegate
 Arguments:
  - who (address) - the address to delegate to
 
 Delegates staked ECOx to a chosen recipient
+
+##### Security Notes
+ - reverts when called by not beneficiary
 
 #### unstake
 Arguments:
@@ -56,10 +62,16 @@ Arguments:
 
 Unstakes any lockedup staked ECOx that hasn't already been unstaked
 
+##### Security Notes
+ - reverts when called by not beneficiary
+
 #### clawback
 Arguments: None
 
 Allows admin to reclaim any unvested tokens
+
+##### Security Notes
+ - only callable by admin
 
 #### unvested
 Arguments: None
