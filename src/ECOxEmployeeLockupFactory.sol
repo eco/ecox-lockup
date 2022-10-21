@@ -21,8 +21,8 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
      * @notice Creates a new vesting vault
      * @param token The ERC20 token to vest over time
      * @param beneficiary The address who will receive tokens over time
-     * @param timestamp The cliff timestamp at which tokens vest
      * @param admin The address that can claw back unvested funds
+     * @param timestamp The cliff timestamp at which tokens vest
      * @return The address of the ECOxEmployeeLockup contract created
      */
 
