@@ -25,7 +25,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
 
         token = new MockECOx("Mock", "MOCK", 18);
         ECOxLockupVault implementation = new ECOxLockupVault();
-        factory = new ECOxLockupVaultFactory(address(implementation));
+        factory = new ECOxLockupVaultFactory(address(implementation), address(token));
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
 
@@ -34,7 +34,6 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         snapStart("createVault");
         vault = ECOxLockupVault(
             factory.createVault(
-                address(token),
                 address(beneficiary),
                 address(address(this)),
                 makeArray(100, 100, 100),
@@ -240,7 +239,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         }
 
         vault =
-            ECOxLockupVault(factory.createVault(address(token), address(beneficiary), address(0), amounts, timestamps));
+            ECOxLockupVault(factory.createVault(address(beneficiary), address(0), amounts, timestamps));
 
         for (uint256 i = 0; i < count; i++) {
             vm.warp(initialTimestamp + ((i + 1) * 86400));
@@ -299,7 +298,6 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         amounts[3] = 400;
         vault = ECOxLockupVault(
             factory.createVault(
-                address(token),
                 address(beneficiary),
                 address(0),
                 amounts,
@@ -315,7 +313,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         timestamps[2] = initialTimestamp + 3 days;
         timestamps[3] = initialTimestamp + 4 days;
         vault = ECOxLockupVault(
-            factory.createVault(address(token), address(beneficiary), address(0), makeArray(100, 100, 100), timestamps)
+            factory.createVault(address(beneficiary), address(0), makeArray(100, 100, 100), timestamps)
         );
     }
 

@@ -14,13 +14,15 @@ contract ECOxLockupVaultFactory is IVestingVaultFactory {
 
     address public immutable implementation;
 
-    constructor(address _implementation) {
+    address public immutable token;
+
+    constructor(address _implementation, address _token) {
         implementation = _implementation;
+        token = _token;
     }
 
     /**
      * @notice Creates a new vesting vault
-     * @param token The ERC20 token to vest over time
      * @param beneficiary The address who will receive tokens over time
      * @param amounts The array of amounts to be vested at times in the timestamps array
      * @param timestamps The array of vesting timestamps for tokens in the amounts array
@@ -28,7 +30,6 @@ contract ECOxLockupVaultFactory is IVestingVaultFactory {
      * @return The address of the ECOxLockupVault contract created
      */
     function createVault(
-        address token,
         address beneficiary,
         address admin,
         uint256[] calldata amounts,
