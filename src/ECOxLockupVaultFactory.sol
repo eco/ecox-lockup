@@ -35,6 +35,7 @@ contract ECOxLockupVaultFactory is IVestingVaultFactory {
         uint256[] calldata timestamps
     ) public returns (address) {
         if (amounts.length != timestamps.length) revert InvalidParams();
+        if (amounts.length == 0) revert InvalidParams();
 
         bytes memory data = abi.encodePacked(token, beneficiary, amounts.length, amounts, timestamps);
         ECOxLockupVault clone = ECOxLockupVault(implementation.clone(data));
