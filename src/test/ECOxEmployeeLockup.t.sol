@@ -24,7 +24,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         deployERC1820();
         token = new MockECOx("Mock", "MOCK", 18);
         ECOxEmployeeLockup implementation = new ECOxEmployeeLockup();
-        factory = new ECOxEmployeeLockupFactory(address(implementation));
+        factory = new ECOxEmployeeLockupFactory(address(implementation), address(token));
 
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
@@ -33,7 +33,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         token.approve(address(factory), 300);
         snapStart("createEmployeeVault");
         vault = ECOxEmployeeLockup(
-            factory.createVault(address(token), address(beneficiary), address(address(this)), initialTimestamp + 2 days)
+            factory.createVault(address(beneficiary), address(address(this)), initialTimestamp + 2 days)
         );
         snapEnd();
         lockup = MockLockup(vault.lockup());
