@@ -90,7 +90,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
     }
 
     /**
-     * @notice Delegates staked ECOx back to the beneficiary
+     * @notice Delegates staked ECOx to a chosen recipient
      * @param who The address to delegate to
      */
     function delegate(address who) external {
@@ -99,7 +99,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
     }
 
     /**
-     * @notice Delegates staked ECOx back to the beneficiary
+     * @notice Delegates staked ECOx to a chosen recipient
      * @param who The address to delegate to
      */
     function _delegate(address who) internal {

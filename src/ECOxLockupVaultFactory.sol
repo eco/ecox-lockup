@@ -24,9 +24,9 @@ contract ECOxLockupVaultFactory is IVestingVaultFactory {
     /**
      * @notice Creates a new vesting vault
      * @param beneficiary The address who will receive tokens over time
+     * @param admin The address that can claw back unvested funds
      * @param amounts The array of amounts to be vested at times in the timestamps array
      * @param timestamps The array of vesting timestamps for tokens in the amounts array
-     * @param admin The address that can claw back unvested funds
      * @return The address of the ECOxLockupVault contract created
      */
     function createVault(
