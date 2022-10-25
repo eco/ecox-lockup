@@ -6,6 +6,7 @@ The solidity contracts for ECOx Lockups for both investors and employees.
 
 These contracts are designed to hold tokens until they are to be released to their beneficiaries according a preset vesting schedule, while allowing beneficiaries to stake and delegate the tokens such that they can still be used in governance. The employee variant has one cliff and can receive tokens throughout, while the investor variant has several cliffs and is created with all tokens intended to be distributed to its beneficiary. Both variants also contain a clawback method that enables the admin to reclaim unvested tokens - beneficiary protection from this behavior must necessarily lie in off-chain legal contracts. 
 
+---
 ## API
 
 ### ECOxLockupVault
@@ -13,6 +14,7 @@ These contracts are designed to hold tokens until they are to be released to the
 
 This contract is to be initialized with an investor as the beneficiary and with all vestable tokens deposited on initialization. The contract allows the beneficiary to stake and vote with all of their tokens, and also delegate their voting power as they see fit. Tokens will become available for withdrawal in amounts and at times defined at initialization. Unvested tokens can be clawed back by an admin.
 
+---
 #### Events
 
 ##### Unstaked
@@ -122,7 +124,7 @@ Arguments:
 
 Creates a new investor vesting vault
 
-###
+## Usage
 To get project to play nice with VS code, you need to remap all the dependencies so that VS can link them in the editor. You'll need to do this whenever you add new dependencies to the project.
 
 ```
