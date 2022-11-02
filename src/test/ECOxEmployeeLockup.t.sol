@@ -24,7 +24,10 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         deployERC1820();
         token = new MockECOx("Mock", "MOCK", 18);
         ECOxEmployeeLockup implementation = new ECOxEmployeeLockup();
-        factory = new ECOxEmployeeLockupFactory(address(implementation), address(token));
+        factory = new ECOxEmployeeLockupFactory(
+            address(implementation),
+            address(token)
+        );
 
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
@@ -33,7 +36,11 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         token.approve(address(factory), 300);
         snapStart("createEmployeeVault");
         vault = ECOxEmployeeLockup(
-            factory.createVault(address(beneficiary), address(address(this)), initialTimestamp + 2 days)
+            factory.createVault(
+                address(beneficiary),
+                address(address(this)),
+                initialTimestamp + 2 days
+            )
         );
         snapEnd();
         lockup = MockLockup(vault.lockup());
@@ -65,7 +72,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
         beneficiary.stake(vault, 25);
         token.transfer(address(vault), 50);
-        
+
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 150);
         assertEq(IERC20Upgradeable(lockup).balanceOf(address(vault)), 25);
@@ -114,9 +121,16 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
-        uint256 initialVaultBalance = lockup.balanceOf(address(vault)) + token.balanceOf(address(vault));
+        uint256 initialVaultBalance = lockup.balanceOf(address(vault)) +
+            token.balanceOf(address(vault));
         beneficiary.claim(vault);
-        assertEq(initialBalance + amount, token.balanceOf(address(beneficiary)));
-        assertEq(initialVaultBalance - amount, lockup.balanceOf(address(vault)));
+        assertEq(
+            initialBalance + amount,
+            token.balanceOf(address(beneficiary))
+        );
+        assertEq(
+            initialVaultBalance - amount,
+            lockup.balanceOf(address(vault))
+        );
     }
 }
