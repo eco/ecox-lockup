@@ -16,5 +16,8 @@
   "scripts": {
     "lint": "prettier --write src/*.sol && prettier --write src/**/*.sol",
     "remap": "forge remappings > remappings.txt"
+  },
+  "dependencies": {
+    "hardhat": "^2.12.2"
   }
 }

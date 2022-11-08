@@ -1,0 +1,19 @@
+{
+    "data": {
+        "implementation": "0xb0b0b0b0b0b0",
+
+        "token": "0xdadadadadada",
+
+        "timestamp": 123456,
+    
+        "admin": "0xfefefefefefe"
+
+    },
+    "employees": [
+        {"name": "their name", "beneficiary": "0xbeefbeefbeef"},
+        {"name": "their name", "beneficiary": "0xbeefbeefbeef"},
+        {"name": "their name", "beneficiary": "0xbeefbeefbeef"},
+        {"name": "their name", "beneficiary": "0xbeefbeefbeef"},
+        {"name": "their name", "beneficiary": "0xbeefbeefbeef"}
+    ]
+}

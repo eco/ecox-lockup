@@ -1,10 +1,10 @@
 # ECOx Lockup
 
-The solidity contracts for ECOx Lockups for both investors and employees.
+The solidity contracts for ECOx lockups, including the employee variant
 
 ## Background
 
-These contracts are designed to hold tokens until they are to be released to their beneficiaries according a preset vesting schedule, while allowing beneficiaries to stake and delegate the tokens such that they can still be used in governance. The employee variant has one cliff and can receive tokens throughout, while the investor variant has several cliffs and is created with all tokens intended to be distributed to its beneficiary. Both variants also contain a clawback method that enables the admin to reclaim unvested tokens - beneficiary protection from this behavior must necessarily lie in off-chain legal contracts. 
+These contracts are designed to hold tokens until they are to be released to their beneficiaries according a preset vesting schedule, while allowing beneficiaries to stake and delegate the tokens such that they can still be used in governance. The employee variant has one cliff and can receive tokens throughout, while the non-employee variant has several cliffs and is created with all tokens intended to be distributed to its beneficiary. Both variants also contain a clawback method that enables the admin to reclaim unvested tokens - beneficiary protection from this behavior must necessarily lie off-chain.
 
 ---
 ## API
@@ -12,7 +12,7 @@ These contracts are designed to hold tokens until they are to be released to the
 ### ECOxLockupVault
  - inherits ChunkedVestingVault
 
-This contract is to be initialized with an investor as the beneficiary and with all vestable tokens deposited on initialization. The contract allows the beneficiary to stake and vote with all of their tokens, and also delegate their voting power as they see fit. Tokens will become available for withdrawal in amounts and at times defined at initialization. Unvested tokens can be clawed back by an admin.
+This contract is to be initialized with its beneficiary and with all vestable tokens deposited on initialization. The contract allows the beneficiary to stake and vote with all of their tokens, and also delegate their voting power as they see fit. Tokens will become available for withdrawal in amounts and at times defined at initialization. Unvested tokens can be clawed back by an admin.
 
 ---
 #### Events
@@ -28,17 +28,6 @@ Attributes:
  - `amount` (uint256) - the amount of token staked
 
 Emitted when beneficiary stakes tokens
-
-#### onClaim
-Arguments:
- - amounts (uint256) - the amount of tokens being claimed
-
-Helper function unstaking required tokens before they are claimed
-
-#### getECOxStaking
-Arguments: None
-
-Fetches the ECOxStaking contract from the ERC1820Registry
 
 #### stake
 Arguments:
@@ -83,7 +72,7 @@ Returns amount of unvested tokens
 ### ECOxEmployeeLockup
  - inherits `ECOxLockupVault`
 
-Employee variant of investor lockup contract. This contract is designed to be initialized with an employee as the beneficiary and containing no tokens at time of creation. The contract can (and should) receive tokens throughout and should release them all at the predetermined cliff timestamp
+Employee variant of lockup contract. This contract is designed to be initialized with an employee as the beneficiary and containing no tokens at time of creation. The contract can (and should) receive tokens throughout and should release them all at the predetermined cliff timestamp
 
 #### vestedOn
 Arguments:
@@ -112,7 +101,7 @@ Creates a new employee vesting vault
 
 ### ECOxLockupVaultFactory
 
-Factory contract to create investor lockups
+Factory contract to create lockups
 
 #### createVault
 Arguments:
@@ -122,7 +111,7 @@ Arguments:
  - amounts (uint256 array) - The array of amounts to be vested at times in the timestamps array
  - timestamps (uint256 array) - The array of vesting timestamps for tokens in the amounts array
 
-Creates a new investor vesting vault
+Creates a new vesting vault
 
 ## Usage
 To get project to play nice with VS code, you need to remap all the dependencies so that VS can link them in the editor. You'll need to do this whenever you add new dependencies to the project.
