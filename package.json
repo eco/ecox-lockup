@@ -18,6 +18,7 @@
     "remap": "forge remappings > remappings.txt"
   },
   "dependencies": {
+    "ethers": "^5.7.2",
     "hardhat": "^2.12.2"
   }
 }
