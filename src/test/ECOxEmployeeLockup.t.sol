@@ -102,6 +102,12 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         assertEq(token.balanceOf(address(beneficiary)), 101);
     }
 
+    function testDelegate() public {
+        assertFalse(lockup.isDelegated(address(vault), address(beneficiary)));
+        beneficiary.delegate(vault, address(beneficiary));
+        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
+    }
+
     function deployERC1820() internal {
         vm.etch(
             address(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24),

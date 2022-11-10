@@ -3,6 +3,7 @@ pragma solidity 0.8.15;
 import {ECOxLockupVault} from "./ECOxLockupVault.sol";
 import {IECOx} from "./interfaces/IECOx.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
 
 /** 
  * @notice ECOxEmployeeLockup contract holds ECOx for employees until a cliff date has passed. 
@@ -12,6 +13,14 @@ import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/to
  * only one of each. 
  */
 contract ECOxEmployeeLockup is ECOxLockupVault {
+
+    function initialize(address admin) public override initializer {
+        ChunkedVestingVault._initialize(admin);
+
+        address _lockup = getECOxStaking();
+        if (_lockup == address(0)) revert InvalidLockup();
+        lockup = _lockup;
+    }
 
     /**
      * @notice calculates tokens vested at a given timestamp
