@@ -15,9 +15,12 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
 
     address public immutable token;
 
-    constructor(address _implementation, address _token) {
+    address public immutable staking;
+
+    constructor(address _implementation, address _token, address _staking) {
         implementation = _implementation;
         token = _token;
+        staking = _staking;
     }
 
     /**
@@ -36,7 +39,7 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
         bytes memory data = abi.encodePacked(token, beneficiary, len, [0], [timestamp]);
         ECOxEmployeeLockup clone = ECOxEmployeeLockup(implementation.clone(data));
 
-        clone.initialize(admin);
+        clone.initialize(admin, staking);
         emit VaultCreated(token, beneficiary, address(clone));
         return address(clone);
     }

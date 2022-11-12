@@ -14,10 +14,10 @@ import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
  */
 contract ECOxEmployeeLockup is ECOxLockupVault {
 
-    function initialize(address admin) public override initializer {
+    function initialize(address admin, address staking) public initializer {
         ChunkedVestingVault._initialize(admin);
 
-        address _lockup = getECOxStaking();
+        address _lockup = staking;
         if (_lockup == address(0)) revert InvalidLockup();
         lockup = _lockup;
     }
