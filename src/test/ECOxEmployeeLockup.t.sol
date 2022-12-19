@@ -16,7 +16,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     ECOxEmployeeLockupFactory factory;
     ECOxEmployeeLockup vault;
     MockECOx token;
-    MockLockup lockup;
+    MockLockup MockECOxStaking;
     MockBeneficiary beneficiary;
     uint256 initialTimestamp;
 
@@ -24,7 +24,8 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         deployERC1820();
         token = new MockECOx("Mock", "MOCK", 18);
         ECOxEmployeeLockup implementation = new ECOxEmployeeLockup();
-        factory = new ECOxEmployeeLockupFactory(address(implementation), address(token));
+        MockECOxStaking = MockLockup(vault.lockup());
+        factory = new ECOxEmployeeLockupFactory(address(implementation), address(token), address(MockECOxStaking));
 
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
@@ -36,7 +37,6 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
             factory.createVault(address(beneficiary), address(address(this)), initialTimestamp + 2 days)
         );
         snapEnd();
-        lockup = MockLockup(vault.lockup());
     }
 
     function testInstantiation() public {
@@ -68,7 +68,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 150);
-        assertEq(IERC20Upgradeable(lockup).balanceOf(address(vault)), 25);
+        assertEq(IERC20Upgradeable(MockECOxStaking).balanceOf(address(vault)), 25);
         assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0);
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 150);
     }
@@ -103,9 +103,9 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     }
 
     function testDelegate() public {
-        assertFalse(lockup.isDelegated(address(vault), address(beneficiary)));
+        assertFalse(MockECOxStaking.isDelegated(address(vault), address(beneficiary)));
         beneficiary.delegate(vault, address(beneficiary));
-        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
+        assertTrue(MockECOxStaking.isDelegated(address(vault), address(beneficiary)));
     }
 
     function deployERC1820() internal {
@@ -120,9 +120,9 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
-        uint256 initialVaultBalance = lockup.balanceOf(address(vault)) + token.balanceOf(address(vault));
+        uint256 initialVaultBalance = MockECOxStaking.balanceOf(address(vault)) + token.balanceOf(address(vault));
         beneficiary.claim(vault);
         assertEq(initialBalance + amount, token.balanceOf(address(beneficiary)));
-        assertEq(initialVaultBalance - amount, lockup.balanceOf(address(vault)));
+        assertEq(initialVaultBalance - amount, MockECOxStaking.balanceOf(address(vault)));
     }
 }
