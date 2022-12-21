@@ -25,7 +25,10 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
 
         token = new MockECOx("Mock", "MOCK", 18);
         ECOxLockupVault implementation = new ECOxLockupVault();
-        factory = new ECOxLockupVaultFactory(address(implementation), address(token));
+        factory = new ECOxLockupVaultFactory(
+            address(implementation),
+            address(token)
+        );
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
 
@@ -37,7 +40,11 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
                 address(beneficiary),
                 address(address(this)),
                 makeArray(100, 100, 100),
-                makeArray(initialTimestamp + 1 days, initialTimestamp + 2 days, initialTimestamp + 3 days)
+                makeArray(
+                    initialTimestamp + 1 days,
+                    initialTimestamp + 2 days,
+                    initialTimestamp + 3 days
+                )
             )
         );
         snapEnd();
@@ -52,7 +59,11 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertUintArrayEq(vault.amounts(), makeArray(100, 100, 100));
         assertUintArrayEq(
             vault.timestamps(),
-            makeArray(initialTimestamp + 1 days, initialTimestamp + 2 days, initialTimestamp + 3 days)
+            makeArray(
+                initialTimestamp + 1 days,
+                initialTimestamp + 2 days,
+                initialTimestamp + 3 days
+            )
         );
         assertEq(vault.vestedChunks(), 0);
         assertEq(vault.vested(), 0);
@@ -223,6 +234,46 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertEq(lockup.balanceOf(address(vault)), 0);
     }
 
+    function testClawbackUnstaked() public {
+        beneficiary.unstake(vault, 49);
+        assertEq(token.balanceOf(address(vault)), 49);
+        assertEq(lockup.balanceOf(address(vault)), 251);
+        assertEq(token.balanceOf(address(this)), 0);
+
+        vault.clawback();
+
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(lockup.balanceOf(address(vault)), 0);
+        assertEq(token.balanceOf(address(this)), 300);
+    }
+
+    function testClawbackDelegated() public {
+        beneficiary.delegate(vault, address(beneficiary));
+        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
+        assertEq(lockup.balanceOf(address(vault)), 300);
+        assertEq(token.balanceOf(address(this)), 0);
+
+        vault.clawback();
+
+        assertEq(lockup.balanceOf(address(vault)), 0);
+        assertEq(token.balanceOf(address(this)), 300);
+    }
+
+    function testClawbackUnstakedDelegated() public {
+        beneficiary.unstake(vault, 49);
+        beneficiary.delegate(vault, address(beneficiary));
+        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
+        assertEq(token.balanceOf(address(vault)), 49);
+        assertEq(lockup.balanceOf(address(vault)), 251);
+        assertEq(token.balanceOf(address(this)), 0);
+
+        vault.clawback();
+
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(lockup.balanceOf(address(vault)), 0);
+        assertEq(token.balanceOf(address(this)), 300);
+    }
+
     // note: can parameterize count & amountPerUnlock,
     // but it is very slow
     // function testManyUnlocks(uint8 count, uint64 amountPerUnlock) public {
@@ -238,8 +289,14 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
             timestamps[i] = initialTimestamp + ((i + 1) * 86400);
         }
 
-        vault =
-            ECOxLockupVault(factory.createVault(address(beneficiary), address(0), amounts, timestamps));
+        vault = ECOxLockupVault(
+            factory.createVault(
+                address(beneficiary),
+                address(0),
+                amounts,
+                timestamps
+            )
+        );
 
         for (uint256 i = 0; i < count; i++) {
             vm.warp(initialTimestamp + ((i + 1) * 86400));
@@ -301,7 +358,11 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
                 address(beneficiary),
                 address(0),
                 amounts,
-                makeArray(initialTimestamp + 1 days, initialTimestamp + 2 days, initialTimestamp + 3 days)
+                makeArray(
+                    initialTimestamp + 1 days,
+                    initialTimestamp + 2 days,
+                    initialTimestamp + 3 days
+                )
             )
         );
     }
@@ -313,7 +374,12 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         timestamps[2] = initialTimestamp + 3 days;
         timestamps[3] = initialTimestamp + 4 days;
         vault = ECOxLockupVault(
-            factory.createVault(address(beneficiary), address(0), makeArray(100, 100, 100), timestamps)
+            factory.createVault(
+                address(beneficiary),
+                address(0),
+                makeArray(100, 100, 100),
+                timestamps
+            )
         );
     }
 
@@ -351,7 +417,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         token.mint(address(vault), 1);
         assertEq(token.balanceOf(address(vault)), 1);
         assertEq(vault.unvested(), 301);
-    
+
         vault.clawback();
         assertEq(token.balanceOf(address(vault)), 0);
         assertEq(lockup.balanceOf(address(vault)), 0);
@@ -360,13 +426,24 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
-        uint256 initialVaultBalance = lockup.balanceOf(address(vault)) + token.balanceOf(address(vault));
+        uint256 initialVaultBalance = lockup.balanceOf(address(vault)) +
+            token.balanceOf(address(vault));
         beneficiary.claim(vault);
-        assertEq(initialBalance + amount, token.balanceOf(address(beneficiary)));
-        assertEq(initialVaultBalance - amount, lockup.balanceOf(address(vault)));
+        assertEq(
+            initialBalance + amount,
+            token.balanceOf(address(beneficiary))
+        );
+        assertEq(
+            initialVaultBalance - amount,
+            lockup.balanceOf(address(vault))
+        );
     }
 
-    function makeArray(uint256 a, uint256 b, uint256 c) internal pure returns (uint256[] memory) {
+    function makeArray(
+        uint256 a,
+        uint256 b,
+        uint256 c
+    ) internal pure returns (uint256[] memory) {
         uint256[] memory result = new uint256[](3);
         result[0] = a;
         result[1] = b;
@@ -383,7 +460,9 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         );
     }
 
-    function assertUintArrayEq(uint256[] memory a, uint256[] memory b) internal {
+    function assertUintArrayEq(uint256[] memory a, uint256[] memory b)
+        internal
+    {
         require(a.length == b.length, "LENGTH_MISMATCH");
 
         for (uint256 i = 0; i < a.length; i++) {
