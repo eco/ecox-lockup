@@ -19,7 +19,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     ECOxEmployeeLockup vault;
     MockECOx token;
     IERC1820RegistryUpgradeable ERC1820;
-    MockLockup MockECOxStaking;
+    MockLockup stakedToken;
     MockBeneficiary beneficiary;
     uint256 initialTimestamp;
     bytes32 LOCKUP_HASH = keccak256(abi.encodePacked("ECOxStaking"));
@@ -31,11 +31,11 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         );
         token = new MockECOx("Mock", "MOCK", 18);
         ECOxEmployeeLockup implementation = new ECOxEmployeeLockup();
-        MockECOxStaking = MockLockup(getECOxStaking());
+        stakedToken = MockLockup(getECOxStaking());
         factory = new ECOxEmployeeLockupFactory(
             address(implementation),
             address(token),
-            address(MockECOxStaking)
+            address(stakedToken)
         );
 
         beneficiary = new MockBeneficiary();
@@ -84,7 +84,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 150);
         assertEq(
-            IERC20Upgradeable(MockECOxStaking).balanceOf(address(vault)),
+            IERC20Upgradeable(stakedToken).balanceOf(address(vault)),
             25
         );
         assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0);
@@ -122,11 +122,11 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
     function testDelegate() public {
         assertFalse(
-            MockECOxStaking.isDelegated(address(vault), address(beneficiary))
+            stakedToken.isDelegated(address(vault), address(beneficiary))
         );
         beneficiary.delegate(vault, address(beneficiary));
         assertTrue(
-            MockECOxStaking.isDelegated(address(vault), address(beneficiary))
+            stakedToken.isDelegated(address(vault), address(beneficiary))
         );
     }
 
@@ -134,13 +134,13 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         token.transfer(address(vault), 100);
         beneficiary.stake(vault, 51);
         assertEq(token.balanceOf(address(vault)), 49);
-        assertEq(MockECOxStaking.balanceOf(address(vault)), 51);
+        assertEq(stakedToken.balanceOf(address(vault)), 51);
         assertEq(token.balanceOf(address(this)), 200);
 
         vault.clawback();
 
         assertEq(token.balanceOf(address(vault)), 0);
-        assertEq(MockECOxStaking.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 0);
         assertEq(token.balanceOf(address(this)), 300);
     }
 
@@ -148,7 +148,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         token.transfer(address(vault), 100);
         beneficiary.delegate(vault, address(beneficiary));
         assertTrue(
-            MockECOxStaking.isDelegated(address(vault), address(beneficiary))
+            stakedToken.isDelegated(address(vault), address(beneficiary))
         );
         assertEq(token.balanceOf(address(vault)), 100);
         assertEq(token.balanceOf(address(this)), 200);
@@ -164,16 +164,16 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         beneficiary.stake(vault, 51);
         beneficiary.delegate(vault, address(beneficiary));
         assertTrue(
-            MockECOxStaking.isDelegated(address(vault), address(beneficiary))
+            stakedToken.isDelegated(address(vault), address(beneficiary))
         );
         assertEq(token.balanceOf(address(vault)), 49);
-        assertEq(MockECOxStaking.balanceOf(address(vault)), 51);
+        assertEq(stakedToken.balanceOf(address(vault)), 51);
         assertEq(token.balanceOf(address(this)), 200);
 
         vault.clawback();
 
         assertEq(token.balanceOf(address(vault)), 0);
-        assertEq(MockECOxStaking.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 0);
         assertEq(token.balanceOf(address(this)), 300);
     }
 
@@ -200,7 +200,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
-        uint256 initialVaultBalance = MockECOxStaking.balanceOf(
+        uint256 initialVaultBalance = stakedToken.balanceOf(
             address(vault)
         ) + token.balanceOf(address(vault));
         beneficiary.claim(vault);
@@ -210,7 +210,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         );
         assertEq(
             initialVaultBalance - amount,
-            MockECOxStaking.balanceOf(address(vault))
+            stakedToken.balanceOf(address(vault))
         );
     }
 

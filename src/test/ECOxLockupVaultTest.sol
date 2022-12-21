@@ -16,7 +16,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     ECOxLockupVaultFactory factory;
     ECOxLockupVault vault;
     MockECOx token;
-    MockLockup lockup;
+    MockLockup stakedToken;
     MockBeneficiary beneficiary;
     uint256 initialTimestamp;
 
@@ -48,7 +48,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
             )
         );
         snapEnd();
-        lockup = MockLockup(vault.lockup());
+        stakedToken = MockLockup(vault.lockup());
     }
 
     function testInstantiation() public {
@@ -170,14 +170,14 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     }
 
     function testAssertDelegation() public {
-        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
-        assertFalse(lockup.isDelegated(address(vault), address(this)));
-        assertFalse(lockup.isDelegated(address(vault), address(factory)));
+        assertTrue(stakedToken.isDelegated(address(vault), address(beneficiary)));
+        assertFalse(stakedToken.isDelegated(address(vault), address(this)));
+        assertFalse(stakedToken.isDelegated(address(vault), address(factory)));
         vm.warp(initialTimestamp + 1 days);
         assertClaimAmount(100);
-        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
-        assertFalse(lockup.isDelegated(address(vault), address(this)));
-        assertFalse(lockup.isDelegated(address(vault), address(factory)));
+        assertTrue(stakedToken.isDelegated(address(vault), address(beneficiary)));
+        assertFalse(stakedToken.isDelegated(address(vault), address(this)));
+        assertFalse(stakedToken.isDelegated(address(vault), address(factory)));
     }
 
     function testDelegateNotBeneficiary() public {
@@ -186,20 +186,20 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     }
 
     function testDelegate() public {
-        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
+        assertTrue(stakedToken.isDelegated(address(vault), address(beneficiary)));
         beneficiary.delegate(vault, address(this));
-        assertFalse(lockup.isDelegated(address(vault), address(beneficiary)));
-        assertTrue(lockup.isDelegated(address(vault), address(this)));
+        assertFalse(stakedToken.isDelegated(address(vault), address(beneficiary)));
+        assertTrue(stakedToken.isDelegated(address(vault), address(this)));
     }
 
     function testECOxStaking() public {
         assertEq(token.balanceOf(address(vault)), 0);
         // instead of ECOx in the vault, it stores sECOx
-        assertEq(lockup.balanceOf(address(vault)), 300);
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
         vm.warp(initialTimestamp + 1 days);
         assertClaimAmount(100);
         assertEq(token.balanceOf(address(vault)), 0);
-        assertEq(lockup.balanceOf(address(vault)), 200);
+        assertEq(stakedToken.balanceOf(address(vault)), 200);
     }
 
     function testClawback() public {
@@ -214,7 +214,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         snapEnd();
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 0);
-        assertEq(lockup.balanceOf(address(vault)), 100);
+        assertEq(stakedToken.balanceOf(address(vault)), 100);
         assertClaimAmount(100);
     }
 
@@ -231,46 +231,46 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         vault.clawback();
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 0);
-        assertEq(lockup.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 0);
     }
 
     function testClawbackUnstaked() public {
         beneficiary.unstake(vault, 49);
         assertEq(token.balanceOf(address(vault)), 49);
-        assertEq(lockup.balanceOf(address(vault)), 251);
+        assertEq(stakedToken.balanceOf(address(vault)), 251);
         assertEq(token.balanceOf(address(this)), 0);
 
         vault.clawback();
 
         assertEq(token.balanceOf(address(vault)), 0);
-        assertEq(lockup.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 0);
         assertEq(token.balanceOf(address(this)), 300);
     }
 
     function testClawbackDelegated() public {
         beneficiary.delegate(vault, address(beneficiary));
-        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
-        assertEq(lockup.balanceOf(address(vault)), 300);
+        assertTrue(stakedToken.isDelegated(address(vault), address(beneficiary)));
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
         assertEq(token.balanceOf(address(this)), 0);
 
         vault.clawback();
 
-        assertEq(lockup.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 0);
         assertEq(token.balanceOf(address(this)), 300);
     }
 
     function testClawbackUnstakedDelegated() public {
         beneficiary.unstake(vault, 49);
         beneficiary.delegate(vault, address(beneficiary));
-        assertTrue(lockup.isDelegated(address(vault), address(beneficiary)));
+        assertTrue(stakedToken.isDelegated(address(vault), address(beneficiary)));
         assertEq(token.balanceOf(address(vault)), 49);
-        assertEq(lockup.balanceOf(address(vault)), 251);
+        assertEq(stakedToken.balanceOf(address(vault)), 251);
         assertEq(token.balanceOf(address(this)), 0);
 
         vault.clawback();
 
         assertEq(token.balanceOf(address(vault)), 0);
-        assertEq(lockup.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 0);
         assertEq(token.balanceOf(address(this)), 300);
     }
 
@@ -316,7 +316,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
 
     function testFailWithdrawAfterVoting() public {
         vm.warp(initialTimestamp + 1 days);
-        lockup.setVoted(true);
+        stakedToken.setVoted(true);
         assertClaimAmount(100);
     }
 
@@ -394,7 +394,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     }
 
     function testPreventAdminClawBackByUnstaking() public {
-        assertEq(lockup.balanceOf(address(vault)), 300);
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
         assertEq(token.balanceOf(address(vault)), 0);
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 300);
@@ -405,11 +405,11 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
 
         vault.clawback();
         assertEq(token.balanceOf(address(vault)), 0);
-        assertEq(lockup.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 0);
     }
 
     function testPreventAdminClawBackByTransfer() public {
-        assertEq(lockup.balanceOf(address(vault)), 300);
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
         assertEq(token.balanceOf(address(vault)), 0);
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 300);
@@ -420,13 +420,13 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
 
         vault.clawback();
         assertEq(token.balanceOf(address(vault)), 0);
-        assertEq(lockup.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 0);
     }
 
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
-        uint256 initialVaultBalance = lockup.balanceOf(address(vault)) +
+        uint256 initialVaultBalance = stakedToken.balanceOf(address(vault)) +
             token.balanceOf(address(vault));
         beneficiary.claim(vault);
         assertEq(
@@ -435,7 +435,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         );
         assertEq(
             initialVaultBalance - amount,
-            lockup.balanceOf(address(vault))
+            stakedToken.balanceOf(address(vault))
         );
     }
 
