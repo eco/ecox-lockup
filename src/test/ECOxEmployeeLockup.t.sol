@@ -83,10 +83,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 150);
-        assertEq(
-            IERC20Upgradeable(stakedToken).balanceOf(address(vault)),
-            25
-        );
+        assertEq(IERC20Upgradeable(stakedToken).balanceOf(address(vault)), 25);
         assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0);
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 150);
     }
@@ -200,9 +197,8 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
-        uint256 initialVaultBalance = stakedToken.balanceOf(
-            address(vault)
-        ) + token.balanceOf(address(vault));
+        uint256 initialVaultBalance = stakedToken.balanceOf(address(vault)) +
+            token.balanceOf(address(vault));
         beneficiary.claim(vault);
         assertEq(
             initialBalance + amount,

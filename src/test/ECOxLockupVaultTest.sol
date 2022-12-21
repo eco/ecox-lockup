@@ -170,12 +170,16 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     }
 
     function testAssertDelegation() public {
-        assertTrue(stakedToken.isDelegated(address(vault), address(beneficiary)));
+        assertTrue(
+            stakedToken.isDelegated(address(vault), address(beneficiary))
+        );
         assertFalse(stakedToken.isDelegated(address(vault), address(this)));
         assertFalse(stakedToken.isDelegated(address(vault), address(factory)));
         vm.warp(initialTimestamp + 1 days);
         assertClaimAmount(100);
-        assertTrue(stakedToken.isDelegated(address(vault), address(beneficiary)));
+        assertTrue(
+            stakedToken.isDelegated(address(vault), address(beneficiary))
+        );
         assertFalse(stakedToken.isDelegated(address(vault), address(this)));
         assertFalse(stakedToken.isDelegated(address(vault), address(factory)));
     }
@@ -186,9 +190,13 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     }
 
     function testDelegate() public {
-        assertTrue(stakedToken.isDelegated(address(vault), address(beneficiary)));
+        assertTrue(
+            stakedToken.isDelegated(address(vault), address(beneficiary))
+        );
         beneficiary.delegate(vault, address(this));
-        assertFalse(stakedToken.isDelegated(address(vault), address(beneficiary)));
+        assertFalse(
+            stakedToken.isDelegated(address(vault), address(beneficiary))
+        );
         assertTrue(stakedToken.isDelegated(address(vault), address(this)));
     }
 
@@ -249,7 +257,9 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
 
     function testClawbackDelegated() public {
         beneficiary.delegate(vault, address(beneficiary));
-        assertTrue(stakedToken.isDelegated(address(vault), address(beneficiary)));
+        assertTrue(
+            stakedToken.isDelegated(address(vault), address(beneficiary))
+        );
         assertEq(stakedToken.balanceOf(address(vault)), 300);
         assertEq(token.balanceOf(address(this)), 0);
 
@@ -262,7 +272,9 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     function testClawbackUnstakedDelegated() public {
         beneficiary.unstake(vault, 49);
         beneficiary.delegate(vault, address(beneficiary));
-        assertTrue(stakedToken.isDelegated(address(vault), address(beneficiary)));
+        assertTrue(
+            stakedToken.isDelegated(address(vault), address(beneficiary))
+        );
         assertEq(token.balanceOf(address(vault)), 49);
         assertEq(stakedToken.balanceOf(address(vault)), 251);
         assertEq(token.balanceOf(address(this)), 0);
