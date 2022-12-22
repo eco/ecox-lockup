@@ -32,6 +32,8 @@ contract ECOxLockupVault is ChunkedVestingVault {
 
     address public lockup;
 
+    address internal currentDelegate;
+
     /**
      * @notice Initializes the lockup vault
      * @dev this pulls in the required ERC20 tokens from the sender to setup
@@ -101,9 +103,12 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @notice Delegates staked ECOx to a chosen recipient
      * @param who The address to delegate to
      */
-    function _delegate(address who) internal {
-        IECOxLockup(lockup).delegate(who);
+    function _delegate(address who) virtual internal {
+        uint256 amount = IERC20Upgradeable(lockup).balanceOf(address(this));
+        IECOxLockup(lockup).undelegateAmountFromAddress(current, amount);
+        IECOxLockup(lockup).delegateAmount(who, amount);
     }
+
 
     /**
      * @notice Unstakes any lockedup staked ECOx that hasn't already been unstaked

@@ -24,6 +24,7 @@ contract MockLockup is IECOxLockup, ERC20Upgradeable, IERC1820ImplementerUpgrade
 
     address public eco;
     mapping(address => address) delegates;
+    mapping(address => mapping(address => uint256)) delegatedAmounts;
     bool voted;
 
     constructor(address _eco) {
@@ -43,12 +44,24 @@ contract MockLockup is IECOxLockup, ERC20Upgradeable, IERC1820ImplementerUpgrade
         delegates[msg.sender] = delegatee;
     }
 
+    function delegateAmount(address delegatee, uint256 amount) external {
+        delegatedAmounts[msg.sender][delegatee] = amount;
+    }
+
     function undelegate() external {
         delegates[msg.sender] = address(0);
     }
 
+    function undelegateAmountFromAddress(address delegatee, uint256 amount) external {
+        delegatedAmounts[msg.sender][delegatee] = 0;
+    }
+
     function isDelegated(address from, address delegatee) external view returns (bool) {
         return delegates[from] == delegatee;
+    }
+
+    function isAmountDelegated(address from, address delegatee) external view returns (bool) {
+        return delegatedAmounts[from][delegatee] > 0;
     }
 
     function setVoted(bool value) external {
