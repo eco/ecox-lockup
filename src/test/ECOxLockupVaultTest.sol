@@ -12,6 +12,7 @@ import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
 import {ECOxLockupVaultFactory} from "../ECOxLockupVaultFactory.sol";
 import {ECOxLockupVault} from "../ECOxLockupVault.sol";
 
+
 contract ECOxLockupVaultTest is Test, GasSnapshot {
     ECOxLockupVaultFactory factory;
     ECOxLockupVault vault;
@@ -197,7 +198,8 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertFalse(
             stakedToken.isAmountDelegated(address(vault), address(beneficiary))
         );
-        // assertTrue(stakedToken.isAmountDelegated(address(vault), address(this)));
+        
+        assertTrue(stakedToken.isAmountDelegated(address(vault), address(this)));
     }
 
     function testECOxStaking() public {
@@ -258,7 +260,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     function testClawbackDelegated() public {
         beneficiary.delegate(vault, address(beneficiary));
         assertTrue(
-            stakedToken.isDelegated(address(vault), address(beneficiary))
+            stakedToken.isAmountDelegated(address(vault), address(beneficiary))
         );
         assertEq(stakedToken.balanceOf(address(vault)), 300);
         assertEq(token.balanceOf(address(this)), 0);
@@ -273,7 +275,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         beneficiary.unstake(vault, 49);
         beneficiary.delegate(vault, address(beneficiary));
         assertTrue(
-            stakedToken.isDelegated(address(vault), address(beneficiary))
+            stakedToken.isAmountDelegated(address(vault), address(beneficiary))
         );
         assertEq(token.balanceOf(address(vault)), 49);
         assertEq(stakedToken.balanceOf(address(vault)), 251);

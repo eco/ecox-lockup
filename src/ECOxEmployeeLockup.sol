@@ -46,6 +46,7 @@ contract ECOxEmployeeLockup is ECOxLockupVault {
      */
     function _delegate(address who) override internal {
         IECOxLockup(lockup).delegate(who);
+        currentDelegate = who;
     }
 
     /**
