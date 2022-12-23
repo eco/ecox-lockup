@@ -9,26 +9,35 @@ import {MockECOx} from "./mock/MockECOx.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {MockLockup} from "./mock/MockLockup.sol";
 import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
+import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
 import {ECOxLockupVaultFactory} from "../ECOxLockupVaultFactory.sol";
 import {ECOxLockupVault} from "../ECOxLockupVault.sol";
+import {IECOx} from "../interfaces/IECOx.sol";
 
 
 contract ECOxLockupVaultTest is Test, GasSnapshot {
     ECOxLockupVaultFactory factory;
     ECOxLockupVault vault;
     MockECOx token;
+    IERC1820RegistryUpgradeable ERC1820;
     MockLockup stakedToken;
     MockBeneficiary beneficiary;
     uint256 initialTimestamp;
+    bytes32 LOCKUP_HASH = keccak256(abi.encodePacked("ECOxStaking"));
 
     function setUp() public {
         deployERC1820();
+        ERC1820 = IERC1820RegistryUpgradeable(
+            0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24
+        );
 
         token = new MockECOx("Mock", "MOCK", 18);
         ECOxLockupVault implementation = new ECOxLockupVault();
+        stakedToken = MockLockup(getECOxStaking());
         factory = new ECOxLockupVaultFactory(
             address(implementation),
-            address(token)
+            address(token),
+            address(stakedToken)
         );
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
@@ -482,5 +491,10 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         for (uint256 i = 0; i < a.length; i++) {
             assertEq(a[i], b[i]);
         }
+    }
+
+    function getECOxStaking() internal returns (address) {
+        address policy = IECOx(address(token)).policy();
+        return ERC1820.getInterfaceImplementer(policy, LOCKUP_HASH);
     }
 }

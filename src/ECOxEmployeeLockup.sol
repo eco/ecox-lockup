@@ -14,7 +14,7 @@ import {IECOxLockup} from "./interfaces/IECOxLockup.sol";
  * only one of each.
  */
 contract ECOxEmployeeLockup is ECOxLockupVault {
-    function initialize(address admin, address staking) public initializer {
+    function initialize(address admin, address staking) public override initializer {
         ChunkedVestingVault._initialize(admin);
 
         address _lockup = staking;
