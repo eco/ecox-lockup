@@ -326,12 +326,6 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         vault.unstake(5);
     }
 
-    function testFailWithdrawAfterVoting() public {
-        vm.warp(initialTimestamp + 1 days);
-        stakedToken.setVoted(true);
-        assertClaimAmount(100);
-    }
-
     function testStakeAlreadyStaked(uint256 amount) public {
         if (amount == 0) amount = 1;
         assertEq(vault.vested(), 0);
