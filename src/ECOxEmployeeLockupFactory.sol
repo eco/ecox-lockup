@@ -2,8 +2,7 @@ pragma solidity ^0.8.0;
 
 import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from
-    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IVestingVaultFactory} from "vesting/interfaces/IVestingVaultFactory.sol";
 import {ECOxEmployeeLockup} from "./ECOxEmployeeLockup.sol";
 
@@ -17,7 +16,11 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
 
     address public immutable staking;
 
-    constructor(address _implementation, address _token, address _staking) {
+    constructor(
+        address _implementation,
+        address _token,
+        address _staking
+    ) {
         implementation = _implementation;
         token = _token;
         staking = _staking;
@@ -31,13 +34,22 @@ contract ECOxEmployeeLockupFactory is IVestingVaultFactory {
      * @return The address of the ECOxEmployeeLockup contract created
      */
 
-    function createVault(address beneficiary, address admin, uint256 timestamp)
-        public
-        returns (address)
-    {
+    function createVault(
+        address beneficiary,
+        address admin,
+        uint256 timestamp
+    ) public returns (address) {
         uint256 len = 1;
-        bytes memory data = abi.encodePacked(token, beneficiary, len, [0], [timestamp]);
-        ECOxEmployeeLockup clone = ECOxEmployeeLockup(implementation.clone(data));
+        bytes memory data = abi.encodePacked(
+            token,
+            beneficiary,
+            len,
+            [0],
+            [timestamp]
+        );
+        ECOxEmployeeLockup clone = ECOxEmployeeLockup(
+            implementation.clone(data)
+        );
 
         clone.initialize(admin, staking);
         emit VaultCreated(token, beneficiary, address(clone));

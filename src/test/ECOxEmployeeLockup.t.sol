@@ -6,8 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {IERC1820RegistryUpgradeable} from
-    "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
+import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
 import {MockECOx} from "./mock/MockECOx.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {MockLockup} from "./mock/MockLockup.sol";
@@ -27,11 +26,17 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
     function setUp() public {
         deployERC1820();
-        ERC1820 = IERC1820RegistryUpgradeable(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+        ERC1820 = IERC1820RegistryUpgradeable(
+            0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24
+        );
         token = new MockECOx("Mock", "MOCK", 18);
         ECOxEmployeeLockup implementation = new ECOxEmployeeLockup();
         MockECOxStaking = MockLockup(getECOxStaking());
-        factory = new ECOxEmployeeLockupFactory(address(implementation), address(token), address(MockECOxStaking));
+        factory = new ECOxEmployeeLockupFactory(
+            address(implementation),
+            address(token),
+            address(MockECOxStaking)
+        );
 
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
@@ -40,7 +45,11 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         token.approve(address(factory), 300);
         snapStart("createEmployeeVault");
         vault = ECOxEmployeeLockup(
-            factory.createVault(address(beneficiary), address(address(this)), initialTimestamp + 2 days)
+            factory.createVault(
+                address(beneficiary),
+                address(address(this)),
+                initialTimestamp + 2 days
+            )
         );
         snapEnd();
     }
@@ -71,10 +80,13 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
         beneficiary.stake(vault, 25);
         token.transfer(address(vault), 50);
-        
+
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 150);
-        assertEq(IERC20Upgradeable(MockECOxStaking).balanceOf(address(vault)), 25);
+        assertEq(
+            IERC20Upgradeable(MockECOxStaking).balanceOf(address(vault)),
+            25
+        );
         assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0);
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 150);
     }
@@ -109,9 +121,13 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     }
 
     function testDelegate() public {
-        assertFalse(MockECOxStaking.isDelegated(address(vault), address(beneficiary)));
+        assertFalse(
+            MockECOxStaking.isDelegated(address(vault), address(beneficiary))
+        );
         beneficiary.delegate(vault, address(beneficiary));
-        assertTrue(MockECOxStaking.isDelegated(address(vault), address(beneficiary)));
+        assertTrue(
+            MockECOxStaking.isDelegated(address(vault), address(beneficiary))
+        );
     }
 
     function deployERC1820() internal {
@@ -126,10 +142,18 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
-        uint256 initialVaultBalance = MockECOxStaking.balanceOf(address(vault)) + token.balanceOf(address(vault));
+        uint256 initialVaultBalance = MockECOxStaking.balanceOf(
+            address(vault)
+        ) + token.balanceOf(address(vault));
         beneficiary.claim(vault);
-        assertEq(initialBalance + amount, token.balanceOf(address(beneficiary)));
-        assertEq(initialVaultBalance - amount, MockECOxStaking.balanceOf(address(vault)));
+        assertEq(
+            initialBalance + amount,
+            token.balanceOf(address(beneficiary))
+        );
+        assertEq(
+            initialVaultBalance - amount,
+            MockECOxStaking.balanceOf(address(vault))
+        );
     }
 
     function getECOxStaking() internal returns (address) {
