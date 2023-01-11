@@ -106,7 +106,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
     function _delegate(address who) virtual internal {
         uint256 amount = IERC20Upgradeable(lockup).balanceOf(address(this));
         if (currentDelegate != address(0)) {
-            IECOxLockup(lockup).undelegateAmountFromAddress(currentDelegate, amount);
+            IECOxLockup(lockup).undelegateFromAddress(who);
         }
         IECOxLockup(lockup).delegateAmount(who, amount);
         currentDelegate = who;

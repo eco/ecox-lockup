@@ -42,7 +42,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
 
-        token.mint(address(this), 300);
+        token.mint(address(this), 400);
         token.approve(address(factory), 300);
         snapStart("createVault");
         vault = ECOxLockupVault(
@@ -181,17 +181,17 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
 
     function testAssertDelegation() public {
         assertTrue(
-            stakedToken.isAmountDelegated(address(vault), address(beneficiary))
+            stakedToken.isDelegated(address(vault), address(beneficiary))
         );
-        assertFalse(stakedToken.isAmountDelegated(address(vault), address(this)));
-        assertFalse(stakedToken.isAmountDelegated(address(vault), address(factory)));
+        assertFalse(stakedToken.isDelegated(address(vault), address(this)));
+        assertFalse(stakedToken.isDelegated(address(vault), address(factory)));
         vm.warp(initialTimestamp + 1 days);
         assertClaimAmount(100);
         assertTrue(
-            stakedToken.isAmountDelegated(address(vault), address(beneficiary))
+            stakedToken.isDelegated(address(vault), address(beneficiary))
         );
-        assertFalse(stakedToken.isAmountDelegated(address(vault), address(this)));
-        assertFalse(stakedToken.isAmountDelegated(address(vault), address(factory)));
+        assertFalse(stakedToken.isDelegated(address(vault), address(this)));
+        assertFalse(stakedToken.isDelegated(address(vault), address(factory)));
     }
 
     function testDelegateNotBeneficiary() public {
@@ -201,14 +201,14 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
 
     function testDelegate() public {
         assertTrue(
-            stakedToken.isAmountDelegated(address(vault), address(beneficiary))
+            stakedToken.isDelegated(address(vault), address(beneficiary))
         );
         beneficiary.delegate(vault, address(this));
         assertFalse(
-            stakedToken.isAmountDelegated(address(vault), address(beneficiary))
+            stakedToken.isDelegated(address(vault), address(beneficiary))
         );
         
-        assertTrue(stakedToken.isAmountDelegated(address(vault), address(this)));
+        assertTrue(stakedToken.isDelegated(address(vault), address(this)));
     }
 
     function testECOxStaking() public {
@@ -257,44 +257,44 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         beneficiary.unstake(vault, 49);
         assertEq(token.balanceOf(address(vault)), 49);
         assertEq(stakedToken.balanceOf(address(vault)), 251);
-        assertEq(token.balanceOf(address(this)), 0);
+        assertEq(token.balanceOf(address(this)), 100);
 
         vault.clawback();
 
         assertEq(token.balanceOf(address(vault)), 0);
         assertEq(stakedToken.balanceOf(address(vault)), 0);
-        assertEq(token.balanceOf(address(this)), 300);
+        assertEq(token.balanceOf(address(this)), 400);
     }
 
     function testClawbackDelegated() public {
         beneficiary.delegate(vault, address(beneficiary));
         assertTrue(
-            stakedToken.isAmountDelegated(address(vault), address(beneficiary))
+            stakedToken.isDelegated(address(vault), address(beneficiary))
         );
         assertEq(stakedToken.balanceOf(address(vault)), 300);
-        assertEq(token.balanceOf(address(this)), 0);
+        assertEq(token.balanceOf(address(this)), 100);
 
         vault.clawback();
 
         assertEq(stakedToken.balanceOf(address(vault)), 0);
-        assertEq(token.balanceOf(address(this)), 300);
+        assertEq(token.balanceOf(address(this)), 400);
     }
 
     function testClawbackUnstakedDelegated() public {
         beneficiary.unstake(vault, 49);
         beneficiary.delegate(vault, address(beneficiary));
         assertTrue(
-            stakedToken.isAmountDelegated(address(vault), address(beneficiary))
+            stakedToken.isDelegated(address(vault), address(beneficiary))
         );
         assertEq(token.balanceOf(address(vault)), 49);
         assertEq(stakedToken.balanceOf(address(vault)), 251);
-        assertEq(token.balanceOf(address(this)), 0);
+        assertEq(token.balanceOf(address(this)), 100);
 
         vault.clawback();
 
         assertEq(token.balanceOf(address(vault)), 0);
         assertEq(stakedToken.balanceOf(address(vault)), 0);
-        assertEq(token.balanceOf(address(this)), 300);
+        assertEq(token.balanceOf(address(this)), 400);
     }
 
     // note: can parameterize count & amountPerUnlock,
@@ -349,6 +349,42 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertEq(vault.vested(), 100);
         vm.expectRevert(IVestingVault.Unauthorized.selector);
         vault.stake(100);
+    }
+
+    function testDelegateAndClaim() public {
+        beneficiary.delegate(vault, address(beneficiary));
+        assertTrue(
+            stakedToken.isDelegated(address(vault), address(beneficiary))
+        );
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
+        assertEq(token.balanceOf(address(this)), 100);
+        vm.warp(initialTimestamp + 2 days);
+        assertClaimAmount(200);
+    }
+
+    function testDelegateTransferStakeDelegate() public  {
+        beneficiary.delegate(vault, address(beneficiary));
+        assertTrue(
+            stakedToken.isDelegated(address(vault), address(beneficiary))
+        );
+        assertEq(token.balanceOf(address(this)), 100);
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
+
+        token.transfer(address(vault), 51);
+        assertEq(token.balanceOf(address(this)), 49);
+        assertEq(token.balanceOf(address(vault)), 51);
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
+
+        beneficiary.stake(vault, 51);
+        assertEq(token.balanceOf(address(this)), 49);
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 351);
+
+        beneficiary.delegate(vault, address(this));
+        assertTrue(
+            stakedToken.isDelegated(address(vault), address(this))
+        );
     }
 
     function testWarpAndClaim(uint256 timestamp) public {

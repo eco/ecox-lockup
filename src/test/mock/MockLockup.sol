@@ -40,28 +40,24 @@ contract MockLockup is IECOxLockup, ERC20Upgradeable, IERC1820ImplementerUpgrade
         _mint(msg.sender, _amount);
     }
 
-    function delegate(address delegatee) external {
+    function delegate(address delegatee) public {
         delegates[msg.sender] = delegatee;
     }
 
     function delegateAmount(address delegatee, uint256 amount) external {
-        delegatedAmounts[msg.sender][delegatee] = amount;
+        delegate(delegatee);
     }
 
     function undelegate() external {
         delegates[msg.sender] = address(0);
     }
 
-    function undelegateAmountFromAddress(address delegatee, uint256 amount) external {
+    function undelegateFromAddress(address delegatee) external {
         delegatedAmounts[msg.sender][delegatee] = 0;
     }
 
     function isDelegated(address from, address delegatee) external view returns (bool) {
         return delegates[from] == delegatee;
-    }
-
-    function isAmountDelegated(address from, address delegatee) external view returns (bool) {
-        return delegatedAmounts[from][delegatee] > 0;
     }
 
     function setVoted(bool value) external {

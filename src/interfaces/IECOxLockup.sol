@@ -12,5 +12,5 @@ interface IECOxLockup {
   
     function undelegate() external;
 
-    function undelegateAmountFromAddress(address delegatee, uint256 amount) external;
+    function undelegateFromAddress(address delegatee) external;
 }
