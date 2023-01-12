@@ -19,3 +19,6 @@
 [submodule "lib/vesting"]
 	path = lib/vesting
 	url = https://github.com/marktoda/vesting
+[submodule "lib/currency"]
+	path = lib/currency
+	url = https://github.com/helix-foundation/currency
