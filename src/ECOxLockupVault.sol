@@ -34,6 +34,8 @@ contract ECOxLockupVault is ChunkedVestingVault {
 
     address public currentDelegate;
 
+    uint256 public delegatedAmount;
+
     /**
      * @notice Initializes the lockup vault
      * @dev this pulls in the required ERC20 tokens from the sender to setup
@@ -47,6 +49,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
 
         _stake(token().balanceOf(address(this)));
         _delegate(beneficiary());
+        delegatedAmount = token().balanceOf(address(this));
     }
 
     /**
@@ -99,6 +102,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
         _delegate(who);
     }
 
+
     /**
      * @notice Delegates staked ECOx to a chosen recipient
      * @param who The address to delegate to
@@ -110,6 +114,16 @@ contract ECOxLockupVault is ChunkedVestingVault {
         }
         IECOxLockup(lockup).delegateAmount(who, amount);
         currentDelegate = who;
+    }
+
+    function undelegate() external {
+        if (msg.sender != beneficiary()) revert Unauthorized();
+        _undelegate(currentDelegate, delegatedAmount);
+    }
+
+    function _undelegate(address who, uint256 amount) internal {
+        IECOxLockup(lockup).undelegateAmountFromAddress(currentDelegate, amount);
+        delegatedAmount -= amount;
     }
 
 
@@ -131,7 +145,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @return The amount of ECOx unstaked
      */
     function _unstake(uint256 amount) internal returns (uint256) {
-        IECOxLockup(lockup).undelegateAmountFromAddress(currentDelegate, amount);
+        _undelegate(currentDelegate, amount);
         IECOxLockup(lockup).withdraw(amount);
         emit Unstaked(amount);
         return amount;
