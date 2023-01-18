@@ -40,7 +40,11 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @notice Initializes the lockup vault
      * @dev this pulls in the required ERC20 tokens from the sender to setup
      */
-    function initialize(address admin, address staking) public virtual initializer {
+    function initialize(address admin, address staking)
+        public
+        virtual
+        initializer
+    {
         ChunkedVestingVault._initialize(admin);
 
         address _lockup = staking;
@@ -101,27 +105,27 @@ contract ECOxLockupVault is ChunkedVestingVault {
         _delegate(who);
     }
 
-
     /**
      * @notice Delegates staked ECOx to a chosen recipient
      * @param who The address to delegate to
      */
-    function _delegate(address who) virtual internal {
+    function _delegate(address who) internal virtual {
         uint256 amount = IERC20Upgradeable(lockup).balanceOf(address(this));
         if (currentDelegate != address(0)) {
-            _undelegate(currentDelegate, delegatedAmount);
+            _undelegate(delegatedAmount);
         }
         IECOxLockup(lockup).delegateAmount(who, amount);
         currentDelegate = who;
         delegatedAmount = amount;
-        
     }
 
-    function _undelegate(address who, uint256 amount) internal {
-        IECOxLockup(lockup).undelegateAmountFromAddress(currentDelegate, amount);
+    function _undelegate(uint256 amount) internal {
+        IECOxLockup(lockup).undelegateAmountFromAddress(
+            currentDelegate,
+            amount
+        );
         delegatedAmount -= amount;
     }
-
 
     /**
      * @notice Unstakes any lockedup staked ECOx that hasn't already been unstaked
@@ -141,9 +145,11 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @return The amount of ECOx unstaked
      */
     function _unstake(uint256 amount) internal returns (uint256) {
-        uint256 undelegatedStake = IERC20Upgradeable(lockup).balanceOf(address(this)) - delegatedAmount;
+        uint256 undelegatedStake = IERC20Upgradeable(lockup).balanceOf(
+            address(this)
+        ) - delegatedAmount;
         if (undelegatedStake < amount) {
-            _undelegate(currentDelegate, amount - undelegatedStake);
+            _undelegate(amount - undelegatedStake);
         }
         IECOxLockup(lockup).withdraw(amount);
         emit Unstaked(amount);

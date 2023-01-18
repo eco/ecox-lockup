@@ -22,7 +22,6 @@ import {FakeECOx} from "./mock/FakeECOx.sol";
 import {ECOxStaking} from "currency/governance/community/ECOxStaking.sol";
 import {console2} from "forge-std/console2.sol";
 
-
 contract ECOxLockupVaultTest is Test, GasSnapshot {
     ECOxLockupVaultFactory factory;
     ECOxLockupVault vault;
@@ -209,9 +208,9 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     function testDelegateSwitch() public {
         assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
         assertEq(stakedToken.getVotingGons(address(this)), 0);
-        
+
         beneficiary.delegate(vault, address(this));
-        
+
         assertEq(stakedToken.getVotingGons(address(beneficiary)), 0);
         assertEq(stakedToken.getVotingGons(address(this)), 300);
     }
@@ -365,7 +364,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertClaimAmount(200);
     }
 
-    function testDelegateTransferStakeDelegate() public  {
+    function testDelegateTransferStakeDelegate() public {
         beneficiary.delegate(vault, address(beneficiary));
         assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
         assertEq(token.balanceOf(address(this)), 100);

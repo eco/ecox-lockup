@@ -14,7 +14,11 @@ import {IECOxLockup} from "./interfaces/IECOxLockup.sol";
  * only one of each.
  */
 contract ECOxEmployeeLockup is ECOxLockupVault {
-    function initialize(address admin, address staking) public override initializer {
+    function initialize(address admin, address staking)
+        public
+        override
+        initializer
+    {
         ChunkedVestingVault._initialize(admin);
 
         address _lockup = staking;
@@ -44,7 +48,7 @@ contract ECOxEmployeeLockup is ECOxLockupVault {
      * @notice Delegates staked ECOx to a chosen recipient
      * @param who The address to delegate to
      */
-    function _delegate(address who) override internal {
+    function _delegate(address who) internal override {
         IECOxLockup(lockup).delegate(who);
         currentDelegate = who;
     }

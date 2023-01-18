@@ -17,7 +17,11 @@ contract ECOxLockupVaultFactory is IVestingVaultFactory {
 
     address public immutable staking;
 
-    constructor(address _implementation, address _token, address _staking) {
+    constructor(
+        address _implementation,
+        address _token,
+        address _staking
+    ) {
         implementation = _implementation;
         token = _token;
         staking = _staking;
