@@ -27,7 +27,6 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     ECOxLockupVaultFactory factory;
     ECOxLockupVault vault;
     FakeECOx token;
-    // MockECOx token;
     IERC1820RegistryUpgradeable ERC1820;
     ECOxStaking stakedToken;
     MockBeneficiary beneficiary;
@@ -42,10 +41,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         );
 
         token = new FakeECOx(dummy, dummy, 1000, dummy, dummy);
-        console2.log(token.distributor());
-        // token = new MockECOx("Mock", "MOCK", 18);
         ECOxLockupVault implementation = new ECOxLockupVault();
-        // ERC20 ierc20Token = IERC20(address(token));
         stakedToken = new ECOxStaking(Policy(dummy), IERC20(address(token)));
         factory = new ECOxLockupVaultFactory(
             address(implementation),
@@ -210,10 +206,10 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         vault.delegate(address(this));
     }
 
-    function testDelegate() public {
+    function testDelegateSwitch() public {
         assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
         assertEq(stakedToken.getVotingGons(address(this)), 0);
-
+        
         beneficiary.delegate(vault, address(this));
         
         assertEq(stakedToken.getVotingGons(address(beneficiary)), 0);
@@ -360,41 +356,35 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         vault.stake(100);
     }
 
-    // function testDelegateAndClaim() public {
-    //     beneficiary.delegate(vault, address(beneficiary));
-    //     assertTrue(
-    //         stakedToken.isDelegated(address(vault), address(beneficiary))
-    //     );
-    //     assertEq(stakedToken.balanceOf(address(vault)), 300);
-    //     assertEq(token.balanceOf(address(this)), 100);
-    //     vm.warp(initialTimestamp + 2 days);
-    //     assertClaimAmount(200);
-    // }
+    function testDelegateAndClaim() public {
+        beneficiary.delegate(vault, address(beneficiary));
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
+        assertEq(token.balanceOf(address(this)), 100);
+        vm.warp(initialTimestamp + 2 days);
+        assertClaimAmount(200);
+    }
 
-    // function testDelegateTransferStakeDelegate() public  {
-    //     beneficiary.delegate(vault, address(beneficiary));
-    //     assertTrue(
-    //         stakedToken.isDelegated(address(vault), address(beneficiary))
-    //     );
-    //     assertEq(token.balanceOf(address(this)), 100);
-    //     assertEq(token.balanceOf(address(vault)), 0);
-    //     assertEq(stakedToken.balanceOf(address(vault)), 300);
+    function testDelegateTransferStakeDelegate() public  {
+        beneficiary.delegate(vault, address(beneficiary));
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
+        assertEq(token.balanceOf(address(this)), 100);
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
 
-    //     token.transfer(address(vault), 51);
-    //     assertEq(token.balanceOf(address(this)), 49);
-    //     assertEq(token.balanceOf(address(vault)), 51);
-    //     assertEq(stakedToken.balanceOf(address(vault)), 300);
+        token.transfer(address(vault), 51);
+        assertEq(token.balanceOf(address(this)), 49);
+        assertEq(token.balanceOf(address(vault)), 51);
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
 
-    //     beneficiary.stake(vault, 51);
-    //     assertEq(token.balanceOf(address(this)), 49);
-    //     assertEq(token.balanceOf(address(vault)), 0);
-    //     assertEq(stakedToken.balanceOf(address(vault)), 351);
+        beneficiary.stake(vault, 51);
+        assertEq(token.balanceOf(address(this)), 49);
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 351);
 
-    //     beneficiary.delegate(vault, address(this));
-    //     assertTrue(
-    //         stakedToken.isDelegated(address(vault), address(this))
-    //     );
-    // }
+        beneficiary.delegate(vault, address(this));
+        assertEq(stakedToken.balanceOf(address(vault)), 351);
+    }
 
     function testWarpAndClaim(uint256 timestamp) public {
         vm.warp(timestamp);

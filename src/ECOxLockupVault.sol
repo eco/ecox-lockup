@@ -49,7 +49,6 @@ contract ECOxLockupVault is ChunkedVestingVault {
 
         _stake(token().balanceOf(address(this)));
         _delegate(beneficiary());
-        delegatedAmount = token().balanceOf(address(this));
     }
 
     /**
@@ -110,15 +109,12 @@ contract ECOxLockupVault is ChunkedVestingVault {
     function _delegate(address who) virtual internal {
         uint256 amount = IERC20Upgradeable(lockup).balanceOf(address(this));
         if (currentDelegate != address(0)) {
-            IECOxLockup(lockup).undelegateFromAddress(who);
+            _undelegate(currentDelegate, delegatedAmount);
         }
         IECOxLockup(lockup).delegateAmount(who, amount);
         currentDelegate = who;
-    }
-
-    function undelegate() external {
-        if (msg.sender != beneficiary()) revert Unauthorized();
-        _undelegate(currentDelegate, delegatedAmount);
+        delegatedAmount = amount;
+        
     }
 
     function _undelegate(address who, uint256 amount) internal {

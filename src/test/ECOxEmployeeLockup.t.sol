@@ -7,31 +7,40 @@ import {Vm} from "forge-std/Vm.sol";
 import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
+import {ERC20} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {MockECOx} from "./mock/MockECOx.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {MockLockup} from "./mock/MockLockup.sol";
 import {ECOxEmployeeLockupFactory} from "../ECOxEmployeeLockupFactory.sol";
 import {ECOxEmployeeLockup} from "../ECOxEmployeeLockup.sol";
 import {IECOx} from "../interfaces/IECOx.sol";
+import {Policy} from "currency/policy/Policy.sol";
+import {IECO} from "currency/currency/IECO.sol";
+import {ECOx} from "currency/currency/ECOx.sol";
+import {FakeECOx} from "./mock/FakeECOx.sol";
+import {ECOxStaking} from "currency/governance/community/ECOxStaking.sol";
+import {console2} from "forge-std/console2.sol";
 
 contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     ECOxEmployeeLockupFactory factory;
     ECOxEmployeeLockup vault;
-    MockECOx token;
+    FakeECOx token;
     IERC1820RegistryUpgradeable ERC1820;
-    MockLockup stakedToken;
+    ECOxStaking stakedToken;
     MockBeneficiary beneficiary;
     uint256 initialTimestamp;
     bytes32 LOCKUP_HASH = keccak256(abi.encodePacked("ECOxStaking"));
+    address dummy = address(0x00F00f00F00FBeEFBeefBEEfBeEfBEefBEEfbEef);
 
     function setUp() public {
         deployERC1820();
         ERC1820 = IERC1820RegistryUpgradeable(
             0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24
         );
-        token = new MockECOx("Mock", "MOCK", 18);
+        token = new FakeECOx(dummy, dummy, 1000, dummy, dummy);
         ECOxEmployeeLockup implementation = new ECOxEmployeeLockup();
-        stakedToken = MockLockup(getECOxStaking());
+        stakedToken = new ECOxStaking(Policy(dummy), IERC20(address(token)));
         factory = new ECOxEmployeeLockupFactory(
             address(implementation),
             address(token),
@@ -41,7 +50,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
 
-        token.mint(address(this), 300);
+        token.cheatMint(address(this), 300);
         token.approve(address(factory), 300);
         snapStart("createEmployeeVault");
         vault = ECOxEmployeeLockup(
@@ -118,13 +127,9 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     }
 
     function testDelegate() public {
-        assertFalse(
-            stakedToken.isDelegated(address(vault), address(beneficiary))
-        );
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 0);
         beneficiary.delegate(vault, address(beneficiary));
-        assertTrue(
-            stakedToken.isDelegated(address(vault), address(beneficiary))
-        );
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 0);
     }
 
     function testClawbackStaked() public {
