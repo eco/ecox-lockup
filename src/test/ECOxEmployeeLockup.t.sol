@@ -9,9 +9,7 @@ import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/to
 import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
 import {ERC20} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {MockECOx} from "./mock/MockECOx.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
-import {MockLockup} from "./mock/MockLockup.sol";
 import {ECOxEmployeeLockupFactory} from "../ECOxEmployeeLockupFactory.sol";
 import {ECOxEmployeeLockup} from "../ECOxEmployeeLockup.sol";
 import {IECOx} from "../interfaces/IECOx.sol";
