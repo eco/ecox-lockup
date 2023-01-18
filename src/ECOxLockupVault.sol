@@ -141,7 +141,10 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @return The amount of ECOx unstaked
      */
     function _unstake(uint256 amount) internal returns (uint256) {
-        _undelegate(currentDelegate, amount);
+        uint256 undelegatedStake = IERC20Upgradeable(lockup).balanceOf(address(this)) - delegatedAmount;
+        if (undelegatedStake < amount) {
+            _undelegate(currentDelegate, amount - undelegatedStake);
+        }
         IECOxLockup(lockup).withdraw(amount);
         emit Unstaked(amount);
         return amount;
