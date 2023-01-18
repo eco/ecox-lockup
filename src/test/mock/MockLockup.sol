@@ -64,6 +64,10 @@ contract MockLockup is IECOxLockup, ERC20Upgradeable, IERC1820ImplementerUpgrade
         voted = value;
     }
 
+    function undelegateAmountFromAddress(address delegatee, uint256 amount) external {
+        
+    }
+
     function withdraw(uint256 _amount) external {
         if (voted) revert Voted();
         IERC20Upgradeable(eco).safeTransfer(msg.sender, _amount);

@@ -131,6 +131,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @return The amount of ECOx unstaked
      */
     function _unstake(uint256 amount) internal returns (uint256) {
+        IECOxLockup(lockup).undelegateAmountFromAddress(currentDelegate, amount);
         IECOxLockup(lockup).withdraw(amount);
         emit Unstaked(amount);
         return amount;

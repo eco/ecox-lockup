@@ -19,4 +19,8 @@ contract MockBeneficiary {
     function delegate(ECOxLockupVault vault, address who) public {
         vault.delegate(who);
     }
+
+    // function undelegate(ECOxLockupVault vault) public {
+    //     vault.undelegate();
+    // }
 }
