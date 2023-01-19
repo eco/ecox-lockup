@@ -67,15 +67,6 @@ contract ECOxLockupVault is ChunkedVestingVault {
     }
 
     /**
-     * @notice Fetches the ECOxStaking contract from ERC1820Registry
-     * @return The ECOx Lockup contract
-     */
-    function getECOxStaking() internal returns (address) {
-        address policy = IECOx(address(token())).policy();
-        return ERC1820.getInterfaceImplementer(policy, LOCKUP_HASH);
-    }
-
-    /**
      * @notice Stakes ECOx in the lockup contract
      * @param amount The amount of ECOx to stake
      */
