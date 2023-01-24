@@ -8,6 +8,7 @@ import {Vm} from "forge-std/Vm.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
 import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
+import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {ERC20} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {ECOxLockupVaultFactory} from "../ECOxLockupVaultFactory.sol";
@@ -353,8 +354,13 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         vault.stake(100);
     }
 
+    function testUnstakeTooMuch() public {
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
+        vm.expectRevert(ECOxLockupVault.InvalidAmount.selector);
+        beneficiary.unstake(vault, 301);
+    }
+
     function testDelegateAndClaim() public {
-        beneficiary.delegate(vault, address(beneficiary));
         assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
         assertEq(stakedToken.balanceOf(address(vault)), 300);
         assertEq(token.balanceOf(address(this)), 100);
@@ -363,7 +369,6 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     }
 
     function testDelegateTransferStakeDelegate() public {
-        beneficiary.delegate(vault, address(beneficiary));
         assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
         assertEq(token.balanceOf(address(this)), 100);
         assertEq(token.balanceOf(address(vault)), 0);
@@ -378,9 +383,11 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertEq(token.balanceOf(address(this)), 49);
         assertEq(token.balanceOf(address(vault)), 0);
         assertEq(stakedToken.balanceOf(address(vault)), 351);
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
+        assertEq(stakedToken.getVotingGons(address(vault)), 51);
 
         beneficiary.delegate(vault, address(this));
-        assertEq(stakedToken.balanceOf(address(vault)), 351);
+        assertEq(stakedToken.getVotingGons(address(this)), 351);
     }
 
     function testWarpAndClaim(uint256 timestamp) public {
@@ -517,10 +524,5 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         for (uint256 i = 0; i < a.length; i++) {
             assertEq(a[i], b[i]);
         }
-    }
-
-    function getECOxStaking() internal returns (address) {
-        address policy = IECOx(address(token)).policy();
-        return ERC1820.getInterfaceImplementer(policy, LOCKUP_HASH);
     }
 }
