@@ -269,36 +269,30 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         assertEq(token.balanceOf(address(this)), 400);
     }
 
-    // function testClawbackDelegated() public {
-    //     beneficiary.delegate(vault, address(beneficiary));
-    //     assertTrue(
-    //         stakedToken.isDelegated(address(vault), address(beneficiary))
-    //     );
-    //     assertEq(stakedToken.balanceOf(address(vault)), 300);
-    //     assertEq(token.balanceOf(address(this)), 100);
+    function testClawbackDelegated() public {
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
+        assertEq(token.balanceOf(address(this)), 100);
 
-    //     vault.clawback();
+        vault.clawback();
 
-    //     assertEq(stakedToken.balanceOf(address(vault)), 0);
-    //     assertEq(token.balanceOf(address(this)), 400);
-    // }
+        assertEq(stakedToken.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 0);
+        assertEq(token.balanceOf(address(this)), 400);
+    }
 
-    // function testClawbackUnstakedDelegated() public {
-    //     beneficiary.unstake(vault, 49);
-    //     beneficiary.delegate(vault, address(beneficiary));
-    //     assertTrue(
-    //         stakedToken.isDelegated(address(vault), address(beneficiary))
-    //     );
-    //     assertEq(token.balanceOf(address(vault)), 49);
-    //     assertEq(stakedToken.balanceOf(address(vault)), 251);
-    //     assertEq(token.balanceOf(address(this)), 100);
+    function testClawbackUnstakedDelegated() public {
+        beneficiary.unstake(vault, 49);
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 251);
+        assertEq(token.balanceOf(address(vault)), 49);
+        assertEq(token.balanceOf(address(this)), 100);
 
-    //     vault.clawback();
+        vault.clawback();
 
-    //     assertEq(token.balanceOf(address(vault)), 0);
-    //     assertEq(stakedToken.balanceOf(address(vault)), 0);
-    //     assertEq(token.balanceOf(address(this)), 400);
-    // }
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(stakedToken.balanceOf(address(vault)), 0);
+        assertEq(token.balanceOf(address(this)), 400);
+    }
 
     // note: can parameterize count & amountPerUnlock,
     // but it is very slow
