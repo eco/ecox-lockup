@@ -22,7 +22,7 @@ contract MockBeneficiary {
     }
 
     function enableDelegation(ECOxLockupVault vault) public {
-        ECOxStaking lockup = ECOxStaking(vault.lockup());
-        lockup.enableDelegationTo();
+        ECOxStaking stakedToken = ECOxStaking(vault.stakedToken());
+        stakedToken.enableDelegationTo();
     }
 }
