@@ -126,7 +126,6 @@ contract ECOxLockupVault is ChunkedVestingVault {
      */
     function unstake(uint256 amount) external returns (uint256) {
         if (msg.sender != beneficiary()) revert Unauthorized();
-        if (amount > IERC20Upgradeable(lockup).balanceOf(address(this))) revert InvalidAmount();
         return _unstake(amount);
     }
 
@@ -137,7 +136,9 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @return The amount of ECOx unstaked
      */
     function _unstake(uint256 amount) internal returns (uint256) {
-        uint256 undelegatedStake = IERC20Upgradeable(lockup).balanceOf(address(this)) - delegatedAmount;
+        uint256 totalStake = IERC20Upgradeable(lockup).balanceOf(address(this));
+        if (amount > totalStake) revert InvalidAmount();
+        uint256 undelegatedStake = totalStake - delegatedAmount;
         if (undelegatedStake < amount) {
             _undelegate(amount - undelegatedStake);
         }
