@@ -4,6 +4,7 @@ import {ECOxLockupVault} from "./ECOxLockupVault.sol";
 import {IECOx} from "./interfaces/IECOx.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
+import {IECOxLockup} from "./interfaces/IECOxLockup.sol";
 
 /**
  * @notice ECOxEmployeeLockup contract holds ECOx for employees until a cliff date has passed.
@@ -13,7 +14,11 @@ import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
  * only one of each.
  */
 contract ECOxEmployeeLockup is ECOxLockupVault {
-    function initialize(address admin, address staking) public initializer {
+    function initialize(address admin, address staking)
+        public
+        override
+        initializer
+    {
         ChunkedVestingVault._initialize(admin);
 
         address _lockup = staking;
@@ -37,6 +42,15 @@ contract ECOxEmployeeLockup is ECOxLockupVault {
                 ? token().balanceOf(address(this)) +
                     IERC20Upgradeable(lockup).balanceOf(address(this))
                 : 0;
+    }
+
+    /**
+     * @notice Delegates staked ECOx to a chosen recipient
+     * @param who The address to delegate to
+     */
+    function _delegate(address who) internal override {
+        IECOxLockup(lockup).delegate(who);
+        currentDelegate = who;
     }
 
     /**

@@ -2,6 +2,7 @@
 pragma solidity 0.8.15;
 
 import {ECOxLockupVault} from "../../ECOxLockupVault.sol";
+import {ECOxStaking} from "currency/governance/community/ECOxStaking.sol";
 
 contract MockBeneficiary {
     function claim(ECOxLockupVault vault) public {
@@ -18,5 +19,10 @@ contract MockBeneficiary {
 
     function delegate(ECOxLockupVault vault, address who) public {
         vault.delegate(who);
+    }
+
+    function enableDelegation(ECOxLockupVault vault) public {
+        ECOxStaking lockup = ECOxStaking(vault.lockup());
+        lockup.enableDelegationTo();
     }
 }
