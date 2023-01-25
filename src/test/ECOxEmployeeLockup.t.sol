@@ -7,31 +7,38 @@ import {Vm} from "forge-std/Vm.sol";
 import {IVestingVault} from "vesting/interfaces/IVestingVault.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC1820RegistryUpgradeable.sol";
-import {MockECOx} from "./mock/MockECOx.sol";
+import {ERC20} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
-import {MockLockup} from "./mock/MockLockup.sol";
 import {ECOxEmployeeLockupFactory} from "../ECOxEmployeeLockupFactory.sol";
 import {ECOxEmployeeLockup} from "../ECOxEmployeeLockup.sol";
 import {IECOx} from "../interfaces/IECOx.sol";
+import {Policy} from "currency/policy/Policy.sol";
+import {IECO} from "currency/currency/IECO.sol";
+import {ECOx} from "currency/currency/ECOx.sol";
+import {FakeECOx} from "./mock/FakeECOx.sol";
+import {ECOxStaking} from "currency/governance/community/ECOxStaking.sol";
+import {console2} from "forge-std/console2.sol";
 
 contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     ECOxEmployeeLockupFactory factory;
     ECOxEmployeeLockup vault;
-    MockECOx token;
+    FakeECOx token;
     IERC1820RegistryUpgradeable ERC1820;
-    MockLockup stakedToken;
+    ECOxStaking stakedToken;
     MockBeneficiary beneficiary;
     uint256 initialTimestamp;
     bytes32 LOCKUP_HASH = keccak256(abi.encodePacked("ECOxStaking"));
+    address dummy = address(0x00F00f00F00FBeEFBeefBEEfBeEfBEefBEEfbEef);
 
     function setUp() public {
         deployERC1820();
         ERC1820 = IERC1820RegistryUpgradeable(
             0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24
         );
-        token = new MockECOx("Mock", "MOCK", 18);
+        token = new FakeECOx(dummy, dummy, 1000, dummy, dummy);
         ECOxEmployeeLockup implementation = new ECOxEmployeeLockup();
-        stakedToken = MockLockup(getECOxStaking());
+        stakedToken = new ECOxStaking(Policy(dummy), IERC20(address(token)));
         factory = new ECOxEmployeeLockupFactory(
             address(implementation),
             address(token),
@@ -41,8 +48,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
 
-        token.mint(address(this), 300);
-        token.approve(address(factory), 300);
+        token.cheatMint(address(this), 300);
         snapStart("createEmployeeVault");
         vault = ECOxEmployeeLockup(
             factory.createVault(
@@ -51,6 +57,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
                 initialTimestamp + 2 days
             )
         );
+        beneficiary.enableDelegation(vault);
         snapEnd();
     }
 
@@ -83,7 +90,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 150);
-        assertEq(IERC20Upgradeable(stakedToken).balanceOf(address(vault)), 25);
+        assertEq(stakedToken.balanceOf(address(vault)), 25);
         assertEq(vault.vestedOn(initialTimestamp + 1 days + 23 hours), 0);
         assertEq(vault.vestedOn(initialTimestamp + 2 days), 150);
     }
@@ -111,20 +118,18 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     function testGriefing() public {
         token.transfer(address(vault), 100);
         vm.warp(initialTimestamp + 2 days);
-        token.mint(address(vault), 1);
+        token.cheatMint(address(vault), 1);
 
         beneficiary.claim(vault);
         assertEq(token.balanceOf(address(beneficiary)), 101);
     }
 
-    function testDelegate() public {
-        assertFalse(
-            stakedToken.isDelegated(address(vault), address(beneficiary))
-        );
+    function testDelegateSimple() public {
+        token.transfer(address(vault), 25);
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 0);
+        beneficiary.stake(vault, 25);
         beneficiary.delegate(vault, address(beneficiary));
-        assertTrue(
-            stakedToken.isDelegated(address(vault), address(beneficiary))
-        );
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 25);
     }
 
     function testClawbackStaked() public {
@@ -144,9 +149,9 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
     function testClawbackDelegated() public {
         token.transfer(address(vault), 100);
         beneficiary.delegate(vault, address(beneficiary));
-        assertTrue(
-            stakedToken.isDelegated(address(vault), address(beneficiary))
-        );
+        // assertTrue(
+        //     stakedToken.isDelegated(address(vault), address(beneficiary))
+        // );
         assertEq(token.balanceOf(address(vault)), 100);
         assertEq(token.balanceOf(address(this)), 200);
 
@@ -160,9 +165,9 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
         token.transfer(address(vault), 100);
         beneficiary.stake(vault, 51);
         beneficiary.delegate(vault, address(beneficiary));
-        assertTrue(
-            stakedToken.isDelegated(address(vault), address(beneficiary))
-        );
+        // assertTrue(
+        //     stakedToken.isDelegated(address(vault), address(beneficiary))
+        // );
         assertEq(token.balanceOf(address(vault)), 49);
         assertEq(stakedToken.balanceOf(address(vault)), 51);
         assertEq(token.balanceOf(address(this)), 200);

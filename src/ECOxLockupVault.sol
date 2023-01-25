@@ -32,14 +32,22 @@ contract ECOxLockupVault is ChunkedVestingVault {
 
     address public lockup;
 
+    address public currentDelegate;
+
+    uint256 public delegatedAmount;
+
     /**
      * @notice Initializes the lockup vault
      * @dev this pulls in the required ERC20 tokens from the sender to setup
      */
-    function initialize(address admin) public virtual override initializer {
+    function initialize(address admin, address staking)
+        public
+        virtual
+        initializer
+    {
         ChunkedVestingVault._initialize(admin);
 
-        address _lockup = getECOxStaking();
+        address _lockup = staking;
         if (_lockup == address(0)) revert InvalidLockup();
         lockup = _lockup;
 
@@ -56,15 +64,6 @@ contract ECOxLockupVault is ChunkedVestingVault {
             _unstake(amount - balance);
         }
         super.onClaim(amount);
-    }
-
-    /**
-     * @notice Fetches the ECOxStaking contract from ERC1820Registry
-     * @return The ECOx Lockup contract
-     */
-    function getECOxStaking() internal returns (address) {
-        address policy = IECOx(address(token())).policy();
-        return ERC1820.getInterfaceImplementer(policy, LOCKUP_HASH);
     }
 
     /**
@@ -101,8 +100,22 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @notice Delegates staked ECOx to a chosen recipient
      * @param who The address to delegate to
      */
-    function _delegate(address who) internal {
-        IECOxLockup(lockup).delegate(who);
+    function _delegate(address who) internal virtual {
+        uint256 amount = IERC20Upgradeable(lockup).balanceOf(address(this));
+        if (currentDelegate != address(0)) {
+            _undelegate(delegatedAmount);
+        }
+        IECOxLockup(lockup).delegateAmount(who, amount);
+        currentDelegate = who;
+        delegatedAmount = amount;
+    }
+
+    function _undelegate(uint256 amount) internal {
+        IECOxLockup(lockup).undelegateAmountFromAddress(
+            currentDelegate,
+            amount
+        );
+        delegatedAmount -= amount;
     }
 
     /**
@@ -123,6 +136,12 @@ contract ECOxLockupVault is ChunkedVestingVault {
      * @return The amount of ECOx unstaked
      */
     function _unstake(uint256 amount) internal returns (uint256) {
+        uint256 totalStake = IERC20Upgradeable(lockup).balanceOf(address(this));
+        if (amount > totalStake) revert InvalidAmount();
+        uint256 undelegatedStake = totalStake - delegatedAmount;
+        if (undelegatedStake < amount) {
+            _undelegate(amount - undelegatedStake);
+        }
         IECOxLockup(lockup).withdraw(amount);
         emit Unstaked(amount);
         return amount;
