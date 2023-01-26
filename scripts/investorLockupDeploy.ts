@@ -4,15 +4,26 @@ require('dotenv').config({ path: '.env' })
 
 const RPCURL = process.env.RPCURL || ''
 const signerPK = process.env.PK || ''
-const TOKEN = process.env.TOKEN || ''
+// const TOKEN = process.env.TOKEN || ''
+const POLICY = process.env.POLICY || ''
 const LOCKUP_DURATION = process.env.DURATION || ''
 const ADMIN = process.env.ADMIN || ''
 
+let ID_ECOX = ethers.utils.solidityKeccak256( ['string'],['ECOx'])
+let ID_ECOX_STAKING = ethers.utils.solidityKeccak256( ['string'],['ECOxStaking'])
+
+type lockupInfo = {
+    beneficiary: string
+    amounts: string[]
+    timestamps: number[]
+}
+
 let lockupVaultABI = getABI('ECOxLockupVault')
 let lockupFactoryABI = getABI('ECOxLockupVaultFactory')
-
-let ecoxStakingABI = JSON.parse(fs.readFileSync('../currency/artifacts/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json', 'utf8'))
-let ecoXABI = JSON.parse(fs.readFileSync('../currency/artifacts/contracts/currency/ECOx.sol/ECOx.json', 'utf8'))
+let policyABI = getABI('Policy')
+let ecoxStakingABI = getABI('ECOxStaking')
+let ecoxABI = getABI('ECOx')
+let lockupInfos: lockupInfo[] = []
 
 function getABI(filename: string) {
     return JSON.parse(fs.readFileSync(`out/${filename}.sol/${filename}.json`, 'utf8'))
@@ -21,49 +32,44 @@ function getABI(filename: string) {
 async function deployVaultFactory() {
     let provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
     let wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
-}
 
-async function main() {
-    let provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
-    let wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
-    // let implFactory = new ethers.ContractFactory(lockupVaultABI.abi, lockupVaultABI.bytecode, wallet)
-    // let lockupImpl = await implFactory.deploy()
-    // await lockupImpl.deployTransaction.wait()
-    // console.log(lockupImpl.address)
+    let implFactory = new ethers.ContractFactory(lockupVaultABI.abi, lockupVaultABI.bytecode, wallet)
+    let lockupVaultImpl = await implFactory.deploy()
+    await lockupVaultImpl.deployTransaction.wait()
+    console.log(`lockupVaultimpl: ${lockupVaultImpl.address}`)
+
+    let policy = new ethers.Contract(POLICY, policyABI.abi, wallet)
+    let ecoX = new ethers.Contract(await policy.policyFor(ID_ECOX), ecoxABI.abi, wallet)
+    let ecoXStaking = new ethers.Contract(await policy.policyFor(ID_ECOX_STAKING), ecoxStakingABI.abi, wallet)
 
     let lockupVaultFactoryFactory = new ethers.ContractFactory(lockupFactoryABI.abi, lockupFactoryABI.bytecode, wallet)
-    let lockupVaultFactory = await lockupVaultFactoryFactory.deploy('0x6dBe4F2A157B6A6802c2C62F465DB5d1a52Fd019', TOKEN, '0x3a16f2Fee32827a9E476d0c87E454aB7C75C92D7')
-    // let lockupVaultFactory = new ethers.Contract('0xe1D86fE06faD281ac5765B55456a16DB08941624', lockupFactoryABI.abi, wallet)
+    let lockupVaultFactory = await lockupVaultFactoryFactory.deploy(lockupVaultImpl, ecoX, ecoXStaking)
     await lockupVaultFactory.deployTransaction.wait()
-    console.log(`lockup vault factory: ${lockupVaultFactory.address}`)
+    console.log(`lockupVaultFactory: ${lockupVaultImpl.address}`)
+}
 
-    // let ecoxStaking = new ethers.Contract(ecoxStakingAddress, ecoxStakingABI.abi)
-    // await ecoxStaking.connect(wallet).enableDelegationTo()
-    // await ecoxStaking.connect(otherWallet).enableDelegationTo()
-    
-    let cliffTimestamp = (await provider.getBlock('latest')).timestamp + parseInt(LOCKUP_DURATION)
-    let employeeBeneficiaryAddresses = (fs.readFileSync('inputs2.csv', 'utf8')).split(',')
-    // let tx
-    // let receipt 
-    console.log(employeeBeneficiaryAddresses.length)
-    for (let i = 0; i < employeeBeneficiaryAddresses.length; i++) {
+async function launchVaults(lockupVaultFactory: any, lockupCsvFilename: string) {
+    let provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
+    let wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
+
+    // populates lockupInfos
+    await processInputs(lockupCsvFilename)
+
+    let tx
+    let receipt
+    for (let i = 0; i < lockupInfos.length; i++) {
+        let info: lockupInfo = lockupInfos[i]
         try {
-            let beneficiary = employeeBeneficiaryAddresses[i]
-            console.log(`deploying lockup for ${beneficiary}`)
-            // tx = await lockupVaultFactory.connect(wallet).createVault(beneficiary, ADMIN, cliffTimestamp)
-            // receipt = await tx.wait()
-            let tx = await lockupVaultFactory.connect(wallet).createVault(beneficiary, ADMIN, cliffTimestamp)
-            let receipt = await tx.wait()
+            console.log(`trying to deploy lockup for ${info.beneficiary}`)
+            tx = await lockupVaultFactory.connect(wallet).createVault(info.beneficiary, ADMIN, info.amounts, info.timestamps)
+            receipt = await tx.wait()
             if (receipt.status === 1) {
-                console.log(`deployed lockup for ${beneficiary}`)
+                console.log(`deployed lockup for ${info.beneficiary}`)
                 await new Promise(r => setTimeout(r, 30000));
                 continue
             }
         } catch (e) {
-            // console.log(e)
-            console.log(employeeBeneficiaryAddresses[i])
-            // console.log(tx)
-            // console.log(receipt)
+            console.log(`failed to deploy lockup for ${info.beneficiary}`)
         }
     }
     let events: any[] = await lockupVaultFactory.queryFilter('VaultCreated')
@@ -71,70 +77,37 @@ async function main() {
     for (let i = 0; i < events.length; i++) {
         let beneficiary = events[i].args.beneficiary
         let employeeVaultAddress = events[i].args.vault
-        fs.writeFileSync('employeeOutput.csv', '\n' + beneficiary + ',' + employeeVaultAddress, {
+        fs.writeFileSync('investorOutput.csv', '\n' + beneficiary + ',' + employeeVaultAddress, {
             encoding: 'utf8',
             flag: 'a+'
         })
     }
 }
 
-async function fetchInvestorInfo() {
+async function processInputs(filename: string) {
     let provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
-    let wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
 
-    let implFactory = new ethers.ContractFactory(lockupVaultABI.abi, lockupVaultABI.bytecode, wallet)
-    let lockupImpl = await implFactory.deploy()
-    await lockupImpl.deployTransaction.wait()
-    console.log(lockupImpl.address)
-
-    let lockupVaultFactoryFactory = new ethers.ContractFactory(lockupFactoryABI.abi, lockupFactoryABI.bytecode, wallet)
-    let lockupVaultFactory = await lockupVaultFactoryFactory.deploy('0x6dBe4F2A157B6A6802c2C62F465DB5d1a52Fd019', TOKEN, '0x3a16f2Fee32827a9E476d0c87E454aB7C75C92D7')
-    // let lockupVaultFactory = new ethers.Contract('0xe1D86fE06faD281ac5765B55456a16DB08941624', lockupFactoryABI.abi, wallet)
-    await lockupVaultFactory.deployTransaction.wait()
-    console.log(`lockup vault factory: ${lockupVaultFactory.address}`)
-
-    let investorData = (fs.readFileSync('input/investors1.csv', 'utf8')).split('\r\n,,\r\n,,')
-    console.log(investorData.length)
+    let investorData = (fs.readFileSync(filename, 'utf8')).split('\r\n,,\r\n')
+    let startTime: number = (await provider.getBlock('latest')).timestamp
     for (let i = 0; i < investorData.length; i++) {
         try {
             let amounts: string[] = []
-            let timestamps: string[] = []
+            let timestamps: number[] = []
             let entry = investorData[i].split(',,\r')
             let beneficiary = entry[0]
             let pairs = entry[1]
             pairs.split('\r\n').forEach( function (pair) {
                 let pieces = pair.split(',')
                 amounts.push(pieces[1])
-                timestamps.push(pieces[2])
+                //convert delta timestamps into actual timestamps
+                timestamps.push(parseInt(pieces[2]) + startTime)
             })
-            // console.log(beneficiary, timestamps, amounts)
-            console.log(`deploying lockup for ${beneficiary}`)
-
-            let tx = await lockupVaultFactory.connect(wallet).createVault(beneficiary, ADMIN, amounts, timestamps)
-            let receipt = await tx.wait()
-            if (receipt.status === 1) {
-                console.log(`deployed lockup for ${beneficiary}`)
-                await new Promise(r => setTimeout(r, 30000));
-                continue
-            }
-            
+            // console.log(beneficiary, amounts, timestamps)
+            lockupInfos.push({beneficiary, amounts, timestamps})
         } catch (e) {
-            // console.log(e)
             console.log(investorData[i])
-            // console.log(tx)
-            // console.log(receipt)
         }
-
-        let events: any[] = await lockupVaultFactory.queryFilter('VaultCreated')
-
-        for (let i = 0; i < events.length; i++) {
-            let beneficiary = events[i].args.beneficiary
-            let employeeVaultAddress = events[i].args.vault
-            fs.writeFileSync('output/investorOutput.csv', '\n' + beneficiary + ',' + employeeVaultAddress, {
-                encoding: 'utf8',
-                flag: 'a+'
-            })
-        }
+        console.log(lockupInfos[1])
     }
 }
 
@@ -206,4 +179,4 @@ async function checkBeneficiary() {
 //     console.error(error)
 //     process.exitCode = 1
 // })
-fetchInvestorInfo()
+fetchInvestorInfo('input/investors2.csv')
