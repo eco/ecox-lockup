@@ -43,7 +43,7 @@ Stakes ECOx in the lockup contract
 Arguments:
  - who (address) - the address to delegate to
 
-Delegates staked ECOx to a chosen recipient. Uses non-primary delegation, so any future funds sent to the vault will have to be individually delegated. 
+Delegates staked ECOx to a chosen recipient. Uses non-primary delegation, so any future funds sent to the vault will have to be individually delegated.
 
 ##### Security Notes
  - reverts when called by not beneficiary
@@ -118,7 +118,7 @@ Arguments:
  - amounts (uint256 array) - The array of amounts to be vested at times in the timestamps array
  - timestamps (uint256 array) - The array of vesting timestamps for tokens in the amounts array
 
-Creates a new vesting vault. The vault's tokens are staked by default, and its voting power delegated to the beneficiary. This vault does not use primary delegation, so any further tokens sent to it after initialization must be staked and delegated if their voting power is to be usable. 
+Creates a new vesting vault. The vault's tokens are staked by default, and its voting power delegated to the beneficiary. This vault does not use primary delegation, so any further tokens sent to it after initialization must be staked and delegated if their voting power is to be usable.
 
 ## Usage
 To get project to play nice with VS code, you need to remap all the dependencies so that VS can link them in the editor. You'll need to do this whenever you add new dependencies to the project.
