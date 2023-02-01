@@ -37,12 +37,13 @@ Stakes ECOx in the lockup contract
 
 ##### Security Notes
  - reverts when called by not beneficiary
+ - reverts if amount is greater than the vault balance
 
 #### delegate
 Arguments:
  - who (address) - the address to delegate to
 
-Delegates staked ECOx to a chosen recipient
+Delegates staked ECOx to a chosen recipient. Uses non-primary delegation, so any future funds sent to the vault will have to be individually delegated. 
 
 ##### Security Notes
  - reverts when called by not beneficiary
@@ -55,6 +56,7 @@ Unstakes any lockedup staked ECOx that hasn't already been unstaked
 
 ##### Security Notes
  - reverts when called by not beneficiary
+ - reverts (in _unstake) if amount is greater than the total staked balance of the lockup
 
 #### clawback
 Arguments: None
@@ -63,6 +65,7 @@ Allows admin to reclaim any unvested tokens
 
 ##### Security Notes
  - only callable by admin
+ - does not allow for reclaiming of tokens already vested by beneficiary
 
 #### unvested
 Arguments: None
@@ -80,6 +83,12 @@ Arguments:
 
 Calculates tokens vested at a given timestamp
 
+#### _delegate
+Arguments:
+ - who (address) - the address to delegate to
+
+Delegates staked ECOx to a chosen recipient. Uses primary delegation, so any future funds sent to the vault will automatically be delegated to the recipient.
+
 #### onClaim
 Arguments:
  - amount (uint256) - amount of vested tokens being claimed
@@ -88,30 +97,28 @@ Helper function unstaking required tokens before they are claimed
 
 ### ECOxEmployeeLockupFactory
 
-Factory contract to create employee lockups. Admin is expected to be the zero address, since nobody should be clawing back any employee-destined ECOx as they contractually belong to the employee. 
+Factory contract to create employee lockups.
 
 #### createVault
 Arguments:
- - token (address) - The ERC20 token to vest over time
  - beneficiary (address) - The address who will receive tokens
  - admin (address) - The address that can claw back unvested funds
  - timestamp (uint256) - The cliff timestamp at which tokens vest
 
-Creates a new employee vesting vault
+Creates a new employee vesting vault. Employees must delegate and stake the funds on their own, since the vault is empty on initialization.
 
 ### ECOxLockupVaultFactory
 
-Factory contract to create lockups
+Factory contract to create lockups.
 
 #### createVault
 Arguments:
- - token (address) - The ERC20 token to vest over time
  - beneficiary (address) - The address who will receive tokens
  - admin (address) - The address that can claw back unvested funds
  - amounts (uint256 array) - The array of amounts to be vested at times in the timestamps array
  - timestamps (uint256 array) - The array of vesting timestamps for tokens in the amounts array
 
-Creates a new vesting vault
+Creates a new vesting vault. The vault's tokens are staked by default, and its voting power delegated to the beneficiary. This vault does not use primary delegation, so any further tokens sent to it after initialization must be staked and delegated if their voting power is to be usable. 
 
 ## Usage
 To get project to play nice with VS code, you need to remap all the dependencies so that VS can link them in the editor. You'll need to do this whenever you add new dependencies to the project.
