@@ -21,9 +21,9 @@ contract ECOxEmployeeLockup is ECOxLockupVault {
     {
         ChunkedVestingVault._initialize(admin);
 
-        address _lockup = staking;
-        if (_lockup == address(0)) revert InvalidLockup();
-        lockup = _lockup;
+        address _stakedToken = staking;
+        if (_stakedToken == address(0)) revert InvalidLockup();
+        stakedToken = _stakedToken;
     }
 
     /**
@@ -40,7 +40,7 @@ contract ECOxEmployeeLockup is ECOxLockupVault {
         return
             timestamp >= this.timestampAtIndex(0)
                 ? token().balanceOf(address(this)) +
-                    IERC20Upgradeable(lockup).balanceOf(address(this))
+                    IERC20Upgradeable(stakedToken).balanceOf(address(this))
                 : 0;
     }
 
@@ -49,7 +49,7 @@ contract ECOxEmployeeLockup is ECOxLockupVault {
      * @param who The address to delegate to
      */
     function _delegate(address who) internal override {
-        IECOxLockup(lockup).delegate(who);
+        IECOxLockup(stakedToken).delegate(who);
         currentDelegate = who;
     }
 

@@ -65,7 +65,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
             )
         );
         snapEnd();
-        stakedToken = ECOxStaking(vault.lockup());
+        stakedToken = ECOxStaking(vault.stakedToken());
     }
 
     function testInstantiation() public {
