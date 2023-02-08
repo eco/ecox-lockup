@@ -1,13 +1,12 @@
-// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IVestingVaultFactory} from "vesting/interfaces/IVestingVaultFactory.sol";
-import {ECOxLockupVault} from "./ECOxLockupVault.sol";
+import {ECOxCliffLockup} from "./ECOxCliffLockup.sol";
 
-contract ECOxLockupVaultFactory is IVestingVaultFactory {
+contract ECOxCliffLockupFactory is IVestingVaultFactory {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using ClonesWithImmutableArgs for address;
 
@@ -31,35 +30,27 @@ contract ECOxLockupVaultFactory is IVestingVaultFactory {
      * @notice Creates a new vesting vault
      * @param beneficiary The address who will receive tokens over time
      * @param admin The address that can claw back unvested funds
-     * @param amounts The array of amounts to be vested at times in the timestamps array
-     * @param timestamps The array of vesting timestamps for tokens in the amounts array
-     * @return The address of the ECOxLockupVault contract created
+     * @param timestamp The cliff timestamp at which tokens vest
+     * @return The address of the ECOxCliffLockup contract created
      */
+
     function createVault(
         address beneficiary,
         address admin,
-        uint256[] calldata amounts,
-        uint256[] calldata timestamps
+        uint256 timestamp
     ) public returns (address) {
-        if (amounts.length != timestamps.length) revert InvalidParams();
-        if (amounts.length == 0) revert InvalidParams();
-
+        uint256 len = 1;
         bytes memory data = abi.encodePacked(
             token,
             beneficiary,
-            amounts.length,
-            amounts,
-            timestamps
+            len,
+            [0],
+            [timestamp]
         );
-        ECOxLockupVault clone = ECOxLockupVault(implementation.clone(data));
+        ECOxCliffLockup clone = ECOxCliffLockup(
+            implementation.clone(data)
+        );
 
-        uint256 totalTokens = clone.vestedOn(type(uint256).max);
-        IERC20Upgradeable(token).safeTransferFrom(
-            msg.sender,
-            address(this),
-            totalTokens
-        );
-        IERC20Upgradeable(token).approve(address(clone), totalTokens);
         clone.initialize(admin, staking);
         emit VaultCreated(token, beneficiary, address(clone));
         return address(clone);

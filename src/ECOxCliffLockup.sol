@@ -1,19 +1,22 @@
 pragma solidity 0.8.15;
 
-import {ECOxLockupVault} from "./ECOxLockupVault.sol";
+import {ECOxChunkedLockup} from "./ECOxChunkedLockup.sol";
 import {IECOx} from "./interfaces/IECOx.sol";
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
-import {IECOxLockup} from "./interfaces/IECOxLockup.sol";
+import {IECOxStaking} from "./interfaces/IECOxStaking.sol";
 
 /**
- * @notice ECOxEmployeeLockup contract holds ECOx for employees until a cliff date has passed.
- * Notably it is initialized with only one timestamp (cliff date) and one initial token amount (0).
- * As a result, the methods found in ChunkedVestingVaultArgs will not provide useful information
- * and any methods referring to amounts, timestamps and chunks will reflect the fact that there is
- * only one of each.
+ * @notice ECOxCliffLockup contract is funded regularly with ECOx. Until a cliff date has passed,
+ * the funds cannot be removed, but otherwise there is no unlock schedule and payout is determined by
+ * the funding schedule instead. It is initialized with only one timestamp (cliff date) and an initial
+ * token amount of zero. The methods found in ChunkedVestingVaultArgs will not provide useful information
+ * and any methods referring to amounts, instead the vault is intended to be emptyable at will by the 
+ * beneficiary after the cliff date.
+ *
+ * Due to the vault being funded multiple times over its lifetime, primary delegation must be used.
  */
-contract ECOxEmployeeLockup is ECOxLockupVault {
+contract ECOxCliffLockup is ECOxChunkedLockup {
     function initialize(address admin, address staking)
         public
         override
@@ -49,7 +52,7 @@ contract ECOxEmployeeLockup is ECOxLockupVault {
      * @param who The address to delegate to
      */
     function _delegate(address who) internal override {
-        IECOxLockup(stakedToken).delegate(who);
+        IECOxStaking(stakedToken).delegate(who);
         currentDelegate = who;
     }
 

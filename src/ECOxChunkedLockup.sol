@@ -8,12 +8,18 @@ import {ClawbackVestingVault} from "vesting/ClawbackVestingVault.sol";
 import {ChunkedVestingVault} from "vesting/ChunkedVestingVault.sol";
 import {VestingVault} from "vesting/VestingVault.sol";
 import {IECOx} from "./interfaces/IECOx.sol";
-import {IECOxLockup} from "./interfaces/IECOxLockup.sol";
+import {IECOxStaking} from "./interfaces/IECOxStaking.sol";
 
 /**
- * @notice VestingVault contract for the ECOx currency
+ * @notice ECOxChunkedLockup contract implements ChunkedVestingVault for the ECOx currency.
+ * This contract is funded entirely on creation and follows the same rules as a standard ChunkedVestingVault.
+ * The addition is that it is able to stake all funds in ECOxStaking and delegate them to the beneficiary.
+ * Then, when vested, funds are undelegated and withdrawn from the ECOxStaking contract before allowing the
+ * inherited chunked vault logic to kick in.
+ *
+ * Due to the vault being completely funded on instantiation, it is able to use delegation by amount.
  */
-contract ECOxLockupVault is ChunkedVestingVault {
+contract ECOxChunkedLockup is ChunkedVestingVault {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     /// @notice Lockup address is invalid
@@ -83,7 +89,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
     function _stake(uint256 amount) internal {
         address _lockup = stakedToken;
         token().approve(_lockup, amount);
-        IECOxLockup(_lockup).deposit(amount);
+        IECOxStaking(_lockup).deposit(amount);
         emit Staked(amount);
     }
 
@@ -105,13 +111,13 @@ contract ECOxLockupVault is ChunkedVestingVault {
         if (currentDelegate != address(0)) {
             _undelegate(delegatedAmount);
         }
-        IECOxLockup(stakedToken).delegateAmount(who, amount);
+        IECOxStaking(stakedToken).delegateAmount(who, amount);
         currentDelegate = who;
         delegatedAmount = amount;
     }
 
     function _undelegate(uint256 amount) internal {
-        IECOxLockup(stakedToken).undelegateAmountFromAddress(
+        IECOxStaking(stakedToken).undelegateAmountFromAddress(
             currentDelegate,
             amount
         );
@@ -142,7 +148,7 @@ contract ECOxLockupVault is ChunkedVestingVault {
         if (undelegatedStake < amount) {
             _undelegate(amount - undelegatedStake);
         }
-        IECOxLockup(stakedToken).withdraw(amount);
+        IECOxStaking(stakedToken).withdraw(amount);
         emit Unstaked(amount);
         return amount;
     }

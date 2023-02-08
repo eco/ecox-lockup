@@ -17,8 +17,8 @@ type lockupInfo = {
     timestamps: number[]
 }
 
-let lockupVaultABI = getABI('ECOxLockupVault')
-let lockupFactoryABI = getABI('ECOxLockupVaultFactory')
+let lockupVaultABI = getABI('ECOxChunkedLockup')
+let lockupFactoryABI = getABI('ECOxChunkedLockupFactory')
 let policyABI = getABI('Policy')
 let ecoxStakingABI = getABI('ECOxStaking')
 let ecoxABI = getABI('ECOx')
@@ -89,8 +89,8 @@ async function launchVaults(lockupVaultFactoryAddress: any, lockupCsvFilename: s
 
     for (let i = 0; i < events.length; i++) {
         let beneficiary = events[i].args.beneficiary
-        let employeeVaultAddress = events[i].args.vault
-        fs.writeFileSync('output/investorOutput.csv', '\n' + beneficiary + ',' + employeeVaultAddress, {
+        let beneficiaryVaultAddress = events[i].args.vault
+        fs.writeFileSync('output/chunkedLockupOutput.csv', '\n' + beneficiary + ',' + beneficiaryVaultAddress, {
             encoding: 'utf8',
             flag: 'a+'
         })
@@ -100,13 +100,13 @@ async function launchVaults(lockupVaultFactoryAddress: any, lockupCsvFilename: s
 async function processInputs(filename: string) {
     let provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
 
-    let investorData = (fs.readFileSync(filename, 'utf8')).split('\r\n,,\r\n')
+    let beneficiaryData = (fs.readFileSync(filename, 'utf8')).split('\r\n,,\r\n')
     let startTime: number = (await provider.getBlock('latest')).timestamp
-    for (let i = 0; i < investorData.length; i++) {
+    for (let i = 0; i < beneficiaryData.length; i++) {
         try {
             let amounts: string[] = []
             let timestamps: number[] = []
-            let entry = investorData[i].split(',,\r')
+            let entry = beneficiaryData[i].split(',,\r')
             let beneficiary = entry[0]
             let pairs = entry[1]
             pairs.split('\r\n').forEach( function (pair) {
@@ -118,7 +118,7 @@ async function processInputs(filename: string) {
             // console.log(beneficiary, amounts, timestamps)
             lockupInfos.push({beneficiary, amounts, timestamps})
         } catch (e) {
-            console.log(e, investorData[i])
+            console.log(e, beneficiaryData[i])
         }
     }
     // console.log(lockupInfos)
@@ -191,8 +191,8 @@ async function checkBeneficiary(vaultAddress: string) {
 //     process.exitCode = 1
 // })
 
-// processInputs('input/investorsGoerli.csv')
+// processInputs('input/beneficiariesGoerli.csv')
 // deployVaultFactory()
-// launchVaults('0x698C470792e518388dA9e8F0648A6476B49BDB71', 'input/investorsGoerli.csv')
+// launchVaults('0x698C470792e518388dA9e8F0648A6476B49BDB71', 'input/beneficiariesGoerli.csv')
 // checkBeneficiary('0x42dF61714c9d2fbc1BA76278FdEBb123b0A1906b')
 // checkClaiming('0x42dF61714c9d2fbc1BA76278FdEBb123b0A1906b')
