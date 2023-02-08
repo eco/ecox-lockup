@@ -24,7 +24,8 @@
   "scripts": {
     "lint": "eslint scripts/* --fix && prettier --write src/*.sol && prettier --write src/**/*.sol",
     "remap": "forge remappings > remappings.txt",
-    "eslint": "eslint scripts/* --fix"
+    "eslint": "eslint scripts/* --fix",
+    "build": "forge install && forge build"
   },
   "dependencies": {
     "dotenv": "^16.0.3",
