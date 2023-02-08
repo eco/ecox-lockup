@@ -1,10 +1,10 @@
 clones-with-immutable-args/=lib/clones-with-immutable-args/src/
 currency/=lib/currency/contracts/
 ds-test/=lib/ds-test/src/
-erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/
 forge-gas-snapshot/=lib/forge-gas-snapshot/src/
 forge-std/=lib/forge-std/src/
-openzeppelin-contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
-openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/
+openzeppelin-contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/
+openzeppelin-contracts/=lib/vesting/lib/openzeppelin-contracts/
+@openzeppelin/=lib/vesting/lib/openzeppelin-contracts/
 solmate/=lib/solmate/src/
 vesting/=lib/vesting/src/
