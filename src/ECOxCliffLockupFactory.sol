@@ -47,9 +47,7 @@ contract ECOxCliffLockupFactory is IVestingVaultFactory {
             [0],
             [timestamp]
         );
-        ECOxCliffLockup clone = ECOxCliffLockup(
-            implementation.clone(data)
-        );
+        ECOxCliffLockup clone = ECOxCliffLockup(implementation.clone(data));
 
         clone.initialize(admin, staking);
         emit VaultCreated(token, beneficiary, address(clone));

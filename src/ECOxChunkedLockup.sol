@@ -107,7 +107,9 @@ contract ECOxChunkedLockup is ChunkedVestingVault {
      * @param who The address to delegate to
      */
     function _delegate(address who) internal virtual {
-        uint256 amount = IERC20Upgradeable(stakedToken).balanceOf(address(this));
+        uint256 amount = IERC20Upgradeable(stakedToken).balanceOf(
+            address(this)
+        );
         if (currentDelegate != address(0)) {
             _undelegate(delegatedAmount);
         }
@@ -142,7 +144,9 @@ contract ECOxChunkedLockup is ChunkedVestingVault {
      * @return The amount of ECOx unstaked
      */
     function _unstake(uint256 amount) internal returns (uint256) {
-        uint256 totalStake = IERC20Upgradeable(stakedToken).balanceOf(address(this));
+        uint256 totalStake = IERC20Upgradeable(stakedToken).balanceOf(
+            address(this)
+        );
         if (amount > totalStake) revert InvalidAmount();
         uint256 undelegatedStake = totalStake - delegatedAmount;
         if (undelegatedStake < amount) {
@@ -157,7 +161,9 @@ contract ECOxChunkedLockup is ChunkedVestingVault {
      * @inheritdoc ClawbackVestingVault
      */
     function clawback() public override onlyOwner {
-        uint256 _unstaked = IERC20Upgradeable(stakedToken).balanceOf(address(this));
+        uint256 _unstaked = IERC20Upgradeable(stakedToken).balanceOf(
+            address(this)
+        );
         uint256 _unvested = unvested();
         _unstake(_unstaked < _unvested ? _unstaked : _unvested);
         return super.clawback();

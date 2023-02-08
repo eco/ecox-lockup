@@ -11,7 +11,7 @@ import {IECOxStaking} from "./interfaces/IECOxStaking.sol";
  * the funds cannot be removed, but otherwise there is no unlock schedule and payout is determined by
  * the funding schedule instead. It is initialized with only one timestamp (cliff date) and an initial
  * token amount of zero. The methods found in ChunkedVestingVaultArgs will not provide useful information
- * and any methods referring to amounts, instead the vault is intended to be emptyable at will by the 
+ * and any methods referring to amounts, instead the vault is intended to be emptyable at will by the
  * beneficiary after the cliff date.
  *
  * Due to the vault being funded multiple times over its lifetime, primary delegation must be used.
