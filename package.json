@@ -1,6 +1,6 @@
 {
   "name": "@eco/lockup",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Lockup vault for ECOx",
   "files": [
     "src/**/*.sol"
