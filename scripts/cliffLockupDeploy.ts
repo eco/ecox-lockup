@@ -9,14 +9,14 @@ const TOKEN = process.env.TOKEN || ''
 const LOCKUP_DURATION = process.env.DURATION || ''
 const ADMIN = process.env.ADMIN || ''
 
-const lockupVaultABI = getABI('ECOxEmployeeLockup')
-const lockupFactoryABI = getABI('ECOxEmployeeLockupFactory')
+const lockupVaultABI = getABI('ECOxCliffLockup')
+const lockupFactoryABI = getABI('ECOxCliffLockupFactory')
 
 const ecoxStakingABI = JSON.parse(fs.readFileSync('../currency/artifacts/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json', 'utf8'))
 const ecoXABI = JSON.parse(fs.readFileSync('../currency/artifacts/contracts/currency/ECOx.sol/ECOx.json', 'utf8'))
 
 const inputFile = "inputs2.csv"
-const outputFile = "employeeOutput.csv"
+const outputFile = "cliffLockupOutput.csv"
 const lockupImpl = '0x6dBe4F2A157B6A6802c2C62F465DB5d1a52Fd019'
 const stakingImpl = '0x3a16f2Fee32827a9E476d0c87E454aB7C75C92D7'
 const factoryAddress = '0x61aF871A420a36859df228b66411992190DDeCDF'
@@ -46,13 +46,13 @@ async function main() {
     console.log(`lockup vault factory: ${lockupVaultFactory.address}`)
     
     const cliffTimestamp = (await provider.getBlock('latest')).timestamp + parseInt(LOCKUP_DURATION)
-    const employeeBeneficiaryAddresses = (fs.readFileSync(inputFile, 'utf8')).split(',')
+    const beneficiaryAddresses = (fs.readFileSync(inputFile, 'utf8')).split(',')
     let tx
     let receipt 
-    console.log(employeeBeneficiaryAddresses.length)
-    for (let i = 0; i < employeeBeneficiaryAddresses.length; i++) {
+    console.log(beneficiaryAddresses.length)
+    for (let i = 0; i < beneficiaryAddresses.length; i++) {
         try {
-            const beneficiary = employeeBeneficiaryAddresses[i]
+            const beneficiary = beneficiaryAddresses[i]
             console.log(`deploying lockup for ${beneficiary}`)
             tx = await lockupVaultFactory.connect(wallet).createVault(beneficiary, ADMIN, cliffTimestamp)
             receipt = await tx.wait()
@@ -63,15 +63,15 @@ async function main() {
                 continue
             }
         } catch (e) {
-            console.log(employeeBeneficiaryAddresses[i])
+            console.log(beneficiaryAddresses[i])
         }
     }
     const events: any[] = await lockupVaultFactory.queryFilter('VaultCreated')
 
     for (let i = 0; i < events.length; i++) {
         const beneficiary = events[i].args.beneficiary
-        const employeeVaultAddress = events[i].args.vault
-        fs.writeFileSync(outputFile, '\n' + beneficiary + ',' + employeeVaultAddress, {
+        const beneficiaryVaultAddress = events[i].args.vault
+        fs.writeFileSync(outputFile, '\n' + beneficiary + ',' + beneficiaryVaultAddress, {
             encoding: 'utf8',
             flag: 'a+'
         })

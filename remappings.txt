@@ -1,4 +1,5 @@
 clones-with-immutable-args/=lib/clones-with-immutable-args/src/
+currency/=lib/currency/contracts/
 ds-test/=lib/ds-test/src/
 forge-gas-snapshot/=lib/forge-gas-snapshot/src/
 forge-std/=lib/forge-std/src/

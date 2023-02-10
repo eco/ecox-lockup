@@ -1,3 +1,5 @@
+pragma solidity ^0.8.0;
+
 import {Policy} from "currency/policy/Policy.sol";
 import {IECO} from "currency/currency/IECO.sol";
 import {ECOx} from "currency/currency/ECOx.sol";

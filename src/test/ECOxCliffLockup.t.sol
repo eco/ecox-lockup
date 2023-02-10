@@ -10,8 +10,8 @@ import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/co
 import {ERC20} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
-import {ECOxEmployeeLockupFactory} from "../ECOxEmployeeLockupFactory.sol";
-import {ECOxEmployeeLockup} from "../ECOxEmployeeLockup.sol";
+import {ECOxCliffLockupFactory} from "../ECOxCliffLockupFactory.sol";
+import {ECOxCliffLockup} from "../ECOxCliffLockup.sol";
 import {IECOx} from "../interfaces/IECOx.sol";
 import {Policy} from "currency/policy/Policy.sol";
 import {IECO} from "currency/currency/IECO.sol";
@@ -20,9 +20,9 @@ import {FakeECOx} from "./mock/FakeECOx.sol";
 import {ECOxStaking} from "currency/governance/community/ECOxStaking.sol";
 import {console2} from "forge-std/console2.sol";
 
-contract ECOxEmployeeLockupTest is Test, GasSnapshot {
-    ECOxEmployeeLockupFactory factory;
-    ECOxEmployeeLockup vault;
+contract ECOxCliffLockupTest is Test, GasSnapshot {
+    ECOxCliffLockupFactory factory;
+    ECOxCliffLockup vault;
     FakeECOx token;
     IERC1820RegistryUpgradeable ERC1820;
     ECOxStaking stakedToken;
@@ -37,9 +37,9 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
             0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24
         );
         token = new FakeECOx(dummy, dummy, 1000, dummy, dummy);
-        ECOxEmployeeLockup implementation = new ECOxEmployeeLockup();
+        ECOxCliffLockup implementation = new ECOxCliffLockup();
         stakedToken = new ECOxStaking(Policy(dummy), IERC20(address(token)));
-        factory = new ECOxEmployeeLockupFactory(
+        factory = new ECOxCliffLockupFactory(
             address(implementation),
             address(token),
             address(stakedToken)
@@ -50,7 +50,7 @@ contract ECOxEmployeeLockupTest is Test, GasSnapshot {
 
         token.cheatMint(address(this), 300);
         snapStart("createEmployeeVault");
-        vault = ECOxEmployeeLockup(
+        vault = ECOxCliffLockup(
             factory.createVault(
                 address(beneficiary),
                 address(address(this)),

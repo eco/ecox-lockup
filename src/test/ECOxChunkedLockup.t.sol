@@ -11,8 +11,8 @@ import {IERC1820RegistryUpgradeable} from "openzeppelin-contracts-upgradeable/co
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {ERC20} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {ECOxLockupVaultFactory} from "../ECOxLockupVaultFactory.sol";
-import {ECOxLockupVault} from "../ECOxLockupVault.sol";
+import {ECOxChunkedLockupFactory} from "../ECOxChunkedLockupFactory.sol";
+import {ECOxChunkedLockup} from "../ECOxChunkedLockup.sol";
 import {IECOx} from "../interfaces/IECOx.sol";
 import {Policy} from "currency/policy/Policy.sol";
 import {IECO} from "currency/currency/IECO.sol";
@@ -21,9 +21,9 @@ import {FakeECOx} from "./mock/FakeECOx.sol";
 import {ECOxStaking} from "currency/governance/community/ECOxStaking.sol";
 import {console2} from "forge-std/console2.sol";
 
-contract ECOxLockupVaultTest is Test, GasSnapshot {
-    ECOxLockupVaultFactory factory;
-    ECOxLockupVault vault;
+contract ECOxChunkedLockupTest is Test, GasSnapshot {
+    ECOxChunkedLockupFactory factory;
+    ECOxChunkedLockup vault;
     FakeECOx token;
     IERC1820RegistryUpgradeable ERC1820;
     ECOxStaking stakedToken;
@@ -39,9 +39,9 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         );
 
         token = new FakeECOx(dummy, dummy, 1000, dummy, dummy);
-        ECOxLockupVault implementation = new ECOxLockupVault();
+        ECOxChunkedLockup implementation = new ECOxChunkedLockup();
         stakedToken = new ECOxStaking(Policy(dummy), IERC20(address(token)));
-        factory = new ECOxLockupVaultFactory(
+        factory = new ECOxChunkedLockupFactory(
             address(implementation),
             address(token),
             address(stakedToken)
@@ -52,7 +52,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         token.cheatMint(address(this), 400);
         token.approve(address(factory), 300);
         snapStart("createVault");
-        vault = ECOxLockupVault(
+        vault = ECOxChunkedLockup(
             factory.createVault(
                 address(beneficiary),
                 address(address(this)),
@@ -309,7 +309,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
             timestamps[i] = initialTimestamp + ((i + 1) * 86400);
         }
 
-        vault = ECOxLockupVault(
+        vault = ECOxChunkedLockup(
             factory.createVault(
                 address(beneficiary),
                 address(0),
@@ -337,7 +337,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
     function testStakeAlreadyStaked(uint256 amount) public {
         if (amount == 0) amount = 1;
         assertEq(vault.vested(), 0);
-        vm.expectRevert(ECOxLockupVault.InvalidAmount.selector);
+        vm.expectRevert(ECOxChunkedLockup.InvalidAmount.selector);
         beneficiary.stake(vault, amount);
     }
 
@@ -350,7 +350,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
 
     function testUnstakeTooMuch() public {
         assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
-        vm.expectRevert(ECOxLockupVault.InvalidAmount.selector);
+        vm.expectRevert(ECOxChunkedLockup.InvalidAmount.selector);
         beneficiary.unstake(vault, 301);
     }
 
@@ -403,7 +403,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         amounts[1] = 200;
         amounts[2] = 300;
         amounts[3] = 400;
-        vault = ECOxLockupVault(
+        vault = ECOxChunkedLockup(
             factory.createVault(
                 address(beneficiary),
                 address(0),
@@ -423,7 +423,7 @@ contract ECOxLockupVaultTest is Test, GasSnapshot {
         timestamps[1] = initialTimestamp + 2 days;
         timestamps[2] = initialTimestamp + 3 days;
         timestamps[3] = initialTimestamp + 4 days;
-        vault = ECOxLockupVault(
+        vault = ECOxChunkedLockup(
             factory.createVault(
                 address(beneficiary),
                 address(0),
