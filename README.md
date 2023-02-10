@@ -4,7 +4,7 @@ The solidity contracts for ECOx lockups
 
 ## Background
 
-These contracts are designed to hold tokens until they are to be released to their beneficiaries according a preset vesting schedule, while allowing beneficiaries to stake and delegate the tokens such that they can still be used in governance. The cliff variant has a single unlock and has delegation designed to recieve tokens throughout its lifetime, while the chunked variant has several unlockes and is created with all tokens intended to be distributed to its beneficiary. Both variants also contain a clawback method that enables the admin to reclaim unvested tokens, usually in the case of loss of access to the beneficiary address. Beneficiary protection from this behavior must necessarily lie off-chain.
+These contracts are designed to hold tokens until they are to be released to their beneficiaries according a preset vesting schedule, while allowing beneficiaries to stake and delegate the tokens such that they can still be used in governance. The cliff variant has a single unlock and has delegation designed to receive tokens throughout its lifetime, while the chunked variant has several unlocks and is created with all tokens intended to be distributed to its beneficiary. Both variants also contain a clawback method that enables the admin to reclaim unvested tokens, usually in the case of loss of access to the beneficiary address. Beneficiary protection from this behavior must necessarily lie off-chain.
 
 ---
 ## API
@@ -36,7 +36,7 @@ Arguments:
 Stakes ECOx in the lockup contract
 
 ##### Security Notes
- - reverts when called by not beneficiary
+ - reverts when called by non-beneficiary
  - reverts if amount is greater than the vault balance
 
 #### delegate
@@ -46,16 +46,16 @@ Arguments:
 Delegates staked ECOx to a chosen recipient. Uses non-primary delegation, so any future funds sent to the vault would require calling this function again.
 
 ##### Security Notes
- - reverts when called by not beneficiary
+ - reverts when called by non-beneficiary
 
 #### unstake
 Arguments:
  - amount (uint256) - the amount of ECOx to unstake
 
-Undelegates enough staked ECOx if there is not enough already undelegated.
+Withdraws staked ECOx. Undelegates enough ECOx to allow this if there is not enough already undelegated.
 
 ##### Security Notes
- - reverts when called by not beneficiary
+ - reverts when called by non-beneficiary
  - reverts (in _unstake) if amount is greater than the total staked balance of the lockup
 
 #### clawback
@@ -75,7 +75,7 @@ Returns amount of unvested tokens
 ### ECOxCliffLockup
  - inherits `ECOxChunkedLockup`
 
-The single cliff variant of lockup contract. This contract is designed to be initialized containing no tokens at time of creation and with a single chunk release of all funds at the cliff date. The contract can (and should) receive tokens throughout and can even keep recieving tokens after the cliff date.
+The single cliff variant of lockup contract. This contract is designed to be initialized containing no tokens at time of creation and with a single chunk release of all funds at the cliff date. The contract can (and should) receive tokens throughout and can even keep receiving tokens after the cliff date.
 
 #### vestedOn
 Arguments:
