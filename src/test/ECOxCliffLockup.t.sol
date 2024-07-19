@@ -179,6 +179,20 @@ contract ECOxCliffLockupTest is Test, GasSnapshot {
         assertEq(token.balanceOf(address(this)), 300);
     }
 
+    function testFrontrunCreateVault() public {
+        uint256 nonce = vm.getNonce(address(factory));
+        address predictedVaultAddress = computeCreateAddress(address(factory), nonce);
+        ECOxCliffLockup newVault = ECOxCliffLockup(
+            factory.createVault(
+                address(beneficiary),
+                address(address(this)),
+                initialTimestamp + 2 days
+            )
+        );
+        assertEq(predictedVaultAddress, address(newVault));
+        // discovery: the factory is the deployer of the vault.
+    }
+
     function testClawbackUnstakedUndelegated() public {
         token.transfer(address(vault), 100);
         assertEq(token.balanceOf(address(vault)), 100);
