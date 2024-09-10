@@ -473,6 +473,36 @@ contract ECOxChunkedLockupTest is Test, GasSnapshot {
         assertEq(stakedToken.balanceOf(address(vault)), 0);
     }
 
+    function testTransferWithdraw() public {
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
+        assertEq(token.balanceOf(address(vault)), 0);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 300);
+
+        token.cheatMint(address(vault), 100);
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
+        assertEq(token.balanceOf(address(vault)), 100);
+        assertEq(vault.unvested(), 400);
+
+        vm.warp(initialTimestamp + 10 days);
+        assertEq(vault.vested(), 300);
+        assertEq(vault.unvested(), 100);
+
+        assertClaimAmount(300);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 100);
+        assertEq(stakedToken.balanceOf(address(vault)), 100);
+        assertEq(token.balanceOf(address(vault)), 0);
+
+        assertEq(token.balanceOf(address(this)), 100);
+        assertEq(stakedToken.balanceOf(address(vault)), 100);
+        assertEq(token.balanceOf(address(vault)), 0);
+        vault.clawback();
+        assertEq(token.balanceOf(address(this)), 200);
+        assertEq(stakedToken.balanceOf(address(vault)), 0);
+        assertEq(token.balanceOf(address(vault)), 0);
+    }
+
     function assertClaimAmount(uint256 amount) internal {
         assertEq(vault.vested(), amount);
         uint256 initialBalance = token.balanceOf(address(beneficiary));
