@@ -207,6 +207,7 @@ contract ECOxChunkedLockupTest is Test, GasSnapshot {
     function testDelegateSwitch() public {
         assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
         assertEq(stakedToken.getVotingGons(address(this)), 0);
+        assertEq(vault.currentDelegate)
 
         beneficiary.delegate(vault, address(this));
 

@@ -9,11 +9,11 @@ const TOKEN = process.env.TOKEN || ''
 const LOCKUP_DURATION = process.env.DURATION || ''
 const ADMIN = process.env.ADMIN || ''
 
-const lockupVaultABI = getABI('ECOxCliffLockup')
-const lockupFactoryABI = getABI('ECOxCliffLockupFactory')
+const cliffLockupVaultABI = getABI('ECOxCliffLockup')
+const cliffLockupFactoryABI = getABI('ECOxCliffLockupFactory')
 
-const ecoxStakingABI = JSON.parse(fs.readFileSync('../currency/artifacts/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json', 'utf8'))
-const ecoXABI = JSON.parse(fs.readFileSync('../currency/artifacts/contracts/currency/ECOx.sol/ECOx.json', 'utf8'))
+const ecoxStakingABI = JSON.parse(fs.readFileSync('../currency-development/artifacts/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json', 'utf8'))
+const ecoXABI = JSON.parse(fs.readFileSync('../currency-development/artifacts/contracts/currency/ECOx.sol/ECOx.json', 'utf8'))
 
 const inputFile = "inputs2.csv"
 const outputFile = "cliffLockupOutput.csv"
@@ -31,17 +31,17 @@ async function main() {
 
     // create new impl: 
 
-    // let implFactory = new ethers.ContractFactory(lockupVaultABI.abi, lockupVaultABI.bytecode, wallet)
+    // let implFactory = new ethers.ContractFactory(cliffLockupVaultABI.abi, cliffLockupVaultABI.bytecode, wallet)
     // let lockupImpl = await implFactory.deploy()
     // await lockupImpl.deployTransaction.wait()
     // console.log(lockupImpl.address)
 
     // create new factory: 
 
-    // let lockupVaultFactoryFactory = new ethers.ContractFactory(lockupFactoryABI.abi, lockupFactoryABI.bytecode, wallet)
+    // let lockupVaultFactoryFactory = new ethers.ContractFactory(cliffLockupFactoryABI.abi, cliffLockupFactoryABI.bytecode, wallet)
     // let lockupVaultFactory = await lockupVaultFactoryFactory.deploy(lockupImpl, TOKEN, stakingImpl)
 
-    const lockupVaultFactory = new ethers.Contract(factoryAddress, lockupFactoryABI.abi, wallet)
+    const lockupVaultFactory = new ethers.Contract(factoryAddress, cliffLockupFactoryABI.abi, wallet)
     await lockupVaultFactory.deployTransaction.wait()
     console.log(`lockup vault factory: ${lockupVaultFactory.address}`)
     
@@ -84,7 +84,7 @@ async function checkClaiming(vaultAddressA32: string) {
     const ecox = new ethers.Contract(TOKEN, ecoXABI.abi, wallet)
     const initialbal = await ecox.balanceOf(await wallet.getAddress())
     console.log(initialbal.toString())
-    const vault = new ethers.Contract(vaultAddressA32, lockupVaultABI.abi, wallet)
+    const vault = new ethers.Contract(vaultAddressA32, cliffLockupVaultABI.abi, wallet)
     let vaultbal = await ecox.balanceOf(vaultAddressA32)
     console.log(vaultbal.toString())
     let tx = await vault.claim()
@@ -100,7 +100,7 @@ async function stake(vaultAddress: string) {
     const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
     const ecox = new ethers.Contract(TOKEN, ecoXABI.abi, wallet)
 
-    const vault = new ethers.Contract(vaultAddress, lockupVaultABI.abi, wallet)
+    const vault = new ethers.Contract(vaultAddress, cliffLockupVaultABI.abi, wallet)
     console.log(await vault.lockup())
     console.log(await vault.beneficiary())
     console.log(await wallet.getAddress())
@@ -119,6 +119,21 @@ async function checkBeneficiary(vaultAddress: string) {
     const provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
     const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
 
-    const vault = new ethers.Contract(vaultAddress, lockupVaultABI.abi, wallet)
+    const vault = new ethers.Contract(vaultAddress, cliffLockupVaultABI.abi, wallet)
     console.log(await vault.beneficiary())
 }
+
+async function deploySingleVault(cliffFactoryAddress: string, beneficiary: string, admin: string, duration: number) {
+    const provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
+    const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
+
+    const cliffLockupFactory = new ethers.Contract(cliffFactoryAddress, cliffLockupFactoryABI.abi, wallet)
+    const cliffTimestamp = (await provider.getBlock('latest')).timestamp + duration
+    const tx = await cliffLockupFactory.connect(wallet).createVault(beneficiary, admin, cliffTimestamp)
+    const receipt = await tx.wait()
+    if (receipt.status === 1) {
+        console.log(`deployed lockup for ${beneficiary}`)
+    }
+}
+
+deploySingleVault('0xd4833A3437B835A1ec8A1e6d097aB21a5d62eC00', '0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78', '0xa1B0Fff8876358CA1aad5eAb7f9040617B0fc6d8', 86400)
