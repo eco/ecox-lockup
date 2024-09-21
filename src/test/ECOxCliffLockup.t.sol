@@ -27,6 +27,7 @@ contract ECOxCliffLockupTest is Test, GasSnapshot {
     IERC1820RegistryUpgradeable ERC1820;
     ECOxStaking stakedToken;
     MockBeneficiary beneficiary;
+    MockBeneficiary someOtherBeneficiary;
     uint256 initialTimestamp;
     bytes32 LOCKUP_HASH = keccak256(abi.encodePacked("ECOxStaking"));
     address dummy = address(0x00F00f00F00FBeEFBeefBEEfBeEfBEefBEEfbEef);
@@ -46,6 +47,7 @@ contract ECOxCliffLockupTest is Test, GasSnapshot {
         );
 
         beneficiary = new MockBeneficiary();
+        someOtherBeneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
 
         token.cheatMint(address(this), 300);
@@ -58,6 +60,7 @@ contract ECOxCliffLockupTest is Test, GasSnapshot {
             )
         );
         beneficiary.enableDelegation(vault);
+        someOtherBeneficiary.enableDelegation(vault);
         snapEnd();
     }
 
@@ -190,6 +193,46 @@ contract ECOxCliffLockupTest is Test, GasSnapshot {
         assertEq(token.balanceOf(address(this)), 300);
     }
 
+    function testDelegateAndClaim() public {
+        token.transfer(address(vault), 200);
+        beneficiary.stake(vault, 200);
+        assertEq(stakedToken.balanceOf(address(vault)), 200);
+        assertEq(token.balanceOf(address(vault)), 0);
+        beneficiary.delegate(vault, address(beneficiary));
+
+        vm.warp(initialTimestamp + 2 days);
+        assertClaimAmount(200);
+    }
+
+    function testStakeDelegateUnstake1() public {
+        assertStakeDelegateUnstake(200, 200, 200);
+    }
+
+    function testStakeDelegateUnstake2() public {
+        assertStakeDelegateUnstake(200, 200, 150);
+    }
+    function testStakeDelegateUnstake3() public {
+        assertStakeDelegateUnstake(200, 200, 150);
+    }
+
+    function testStakeDelegateDepositStakeUnstake() public {
+        token.cheatMint(address(this), 200);
+        token.transfer(address(vault), 300);
+        beneficiary.stake(vault, 300);
+        assertEq(stakedToken.balanceOf(address(vault)), 300);
+        beneficiary.delegate(vault, address(beneficiary));
+        token.transfer(address(vault), 100);
+        beneficiary.stake(vault, 50); // 350 staked, 50 unstaked
+        beneficiary.delegate(vault, address(someOtherBeneficiary));
+        token.transfer(address(vault), 100); // 350 staked, 150 unstaked
+        beneficiary.stake(vault, 25); // 375 staked, 125 unstaked
+        beneficiary.unstake(vault, 200); // 175 staked, 325 unstaked
+        assertEq(stakedToken.balanceOf(address(vault)), 175);
+        assertEq(token.balanceOf(address(vault)), 325);
+        vm.warp(initialTimestamp + 2 days);
+        assertClaimAmount(500);
+    }
+
     function deployERC1820() internal {
         vm.etch(
             address(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24),
@@ -213,6 +256,19 @@ contract ECOxCliffLockupTest is Test, GasSnapshot {
             initialVaultBalance - amount,
             stakedToken.balanceOf(address(vault))
         );
+    }
+
+    function assertStakeDelegateUnstake(uint256 transferAmt, uint256 stakeAmt, uint256 unstakeAmt) internal {
+        // stake full amount, delegate full stake, unstake full stake
+        token.transfer(address(vault), transferAmt);
+        beneficiary.stake(vault, stakeAmt);
+        assertEq(stakedToken.balanceOf(address(vault)), stakeAmt);
+        assertEq(token.balanceOf(address(vault)), 0);
+        beneficiary.delegate(vault, address(beneficiary));
+        assertEq(vault.currentDelegate(), address(beneficiary));
+        beneficiary.unstake(vault, unstakeAmt);
+        assertEq(stakedToken.balanceOf(address(vault)), stakeAmt - unstakeAmt);
+        assertEq(token.balanceOf(address(vault)), unstakeAmt);
     }
 
     function getECOxStaking() internal returns (address) {
