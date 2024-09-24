@@ -5,135 +5,201 @@ dotenv.config({ path: '.env' })
 
 const RPCURL = process.env.RPCURL || ''
 const signerPK = process.env.PK || ''
-const TOKEN = process.env.TOKEN || ''
+// const TOKEN = process.env.TOKEN || 0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78
 const LOCKUP_DURATION = process.env.DURATION || ''
-const ADMIN = process.env.ADMIN || ''
+// const ADMIN = process.env.ADMIN || ''
 
 const cliffLockupVaultABI = getABI('ECOxCliffLockup')
 const cliffLockupFactoryABI = getABI('ECOxCliffLockupFactory')
 
-const ecoxStakingABI = JSON.parse(fs.readFileSync('../currency-development/artifacts/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json', 'utf8'))
-const ecoXABI = JSON.parse(fs.readFileSync('../currency-development/artifacts/contracts/currency/ECOx.sol/ECOx.json', 'utf8'))
+const ecoxStakingABI = JSON.parse(
+  fs.readFileSync(
+    '../currency-development/artifacts/contracts/governance/community/ECOxStaking.sol/ECOxStaking.json',
+    'utf8'
+  )
+)
+const ecoXABI = JSON.parse(
+  fs.readFileSync(
+    '../currency-development/artifacts/contracts/currency/ECOx.sol/ECOx.json',
+    'utf8'
+  )
+)
 
-const inputFile = "inputs2.csv"
-const outputFile = "cliffLockupOutput.csv"
-const lockupImpl = '0x6dBe4F2A157B6A6802c2C62F465DB5d1a52Fd019'
+const inputFile = 'in/secondhalf.csv'
+const outputFile = 'cliffLockupOutput.csv'
+const lockupImpl = '0xf84FAbBe1f068859841d0213A6285563b4eE6A9a'
 const stakingImpl = '0x3a16f2Fee32827a9E476d0c87E454aB7C75C92D7'
-const factoryAddress = '0x61aF871A420a36859df228b66411992190DDeCDF'
+const factoryAddress = '0xd4833A3437B835A1ec8A1e6d097aB21a5d62eC00'
+const ADMIN = '0x3b3188f702C26997a51aea0bc7A0826aF044027a'
+// const ADMIN = '0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78'
+const TOKEN = '0xcccD1Ba9f7acD6117834E0D28F25645dECb1736a'
 
 function getABI(filename: string) {
-    return JSON.parse(fs.readFileSync(`out/${filename}.sol/${filename}.json`, 'utf8'))
+  return JSON.parse(
+    fs.readFileSync(`out/${filename}.sol/${filename}.json`, 'utf8')
+  )
 }
 
 async function main() {
-    const provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
-    const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
+  const provider: ethers.providers.BaseProvider =
+    new ethers.providers.JsonRpcProvider(RPCURL)
+  const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
 
-    // create new impl: 
+  // create new impl:
 
-    // let implFactory = new ethers.ContractFactory(cliffLockupVaultABI.abi, cliffLockupVaultABI.bytecode, wallet)
-    // let lockupImpl = await implFactory.deploy()
-    // await lockupImpl.deployTransaction.wait()
-    // console.log(lockupImpl.address)
+  // let implFactory = new ethers.ContractFactory(cliffLockupVaultABI.abi, cliffLockupVaultABI.bytecode, wallet)
+  // let lockupImpl = await implFactory.deploy()
+  // await lockupImpl.deployTransaction.wait()
+  //   console.log(`lockup impl: ${lockupImpl.address}`)
 
-    // create new factory: 
+  // create new factory:
 
-    // let lockupVaultFactoryFactory = new ethers.ContractFactory(cliffLockupFactoryABI.abi, cliffLockupFactoryABI.bytecode, wallet)
-    // let lockupVaultFactory = await lockupVaultFactoryFactory.deploy(lockupImpl, TOKEN, stakingImpl)
+  //   const lockupVaultFactoryFactory = new ethers.ContractFactory(
+  //     cliffLockupFactoryABI.abi,
+  //     cliffLockupFactoryABI.bytecode,
+  //     wallet
+  //   )
+  //   const lockupVaultFactory = await lockupVaultFactoryFactory.deploy(
+  //     lockupImpl,
+  //     TOKEN,
+  //     stakingImpl
+  //   )
 
-    const lockupVaultFactory = new ethers.Contract(factoryAddress, cliffLockupFactoryABI.abi, wallet)
-    await lockupVaultFactory.deployTransaction.wait()
+  const lockupVaultFactory = new ethers.Contract(
+    factoryAddress,
+    cliffLockupFactoryABI.abi,
+    wallet
+  )
+  //   await lockupVaultFactory.deployTransaction.wait()
     console.log(`lockup vault factory: ${lockupVaultFactory.address}`)
-    
-    const cliffTimestamp = (await provider.getBlock('latest')).timestamp + parseInt(LOCKUP_DURATION)
-    const beneficiaryAddresses = (fs.readFileSync(inputFile, 'utf8')).split(',')
-    let tx
-    let receipt 
-    console.log(beneficiaryAddresses.length)
-    for (let i = 0; i < beneficiaryAddresses.length; i++) {
-        try {
-            const beneficiary = beneficiaryAddresses[i]
-            console.log(`deploying lockup for ${beneficiary}`)
-            tx = await lockupVaultFactory.connect(wallet).createVault(beneficiary, ADMIN, cliffTimestamp)
-            receipt = await tx.wait()
-            if (receipt.status === 1) {
-                console.log(`deployed lockup for ${beneficiary}`)
-                // wait until tx goes through, doesn't work without this
-                await new Promise(r => setTimeout(r, 30000));
-                continue
-            }
-        } catch (e) {
-            console.log(beneficiaryAddresses[i])
-        }
-    }
-    const events: any[] = await lockupVaultFactory.queryFilter('VaultCreated')
 
-    for (let i = 0; i < events.length; i++) {
-        const beneficiary = events[i].args.beneficiary
-        const beneficiaryVaultAddress = events[i].args.vault
-        fs.writeFileSync(outputFile, '\n' + beneficiary + ',' + beneficiaryVaultAddress, {
-            encoding: 'utf8',
-            flag: 'a+'
-        })
+  const cliffTimestamp = 1730116800 // 12 noon UTC on 10/28/2024
+  const beneficiaryAddresses = fs.readFileSync(inputFile, 'utf8').split('\n')
+  let tx
+  let receipt
+  console.log(beneficiaryAddresses.length)
+  for (let i = 0; i < beneficiaryAddresses.length; i++) {
+    try {
+      const beneficiary = beneficiaryAddresses[i]
+      console.log(`deploying lockup for ${beneficiary}`)
+      tx = await lockupVaultFactory
+        .connect(wallet)
+        .createVault(beneficiary, ADMIN, cliffTimestamp)
+      receipt = await tx.wait()
+      if (receipt.status === 1) {
+        console.log(`deployed lockup for ${beneficiary}`)
+        // wait until tx goes through, doesn't work without this
+        await new Promise((r) => setTimeout(r, 20000))
+        continue
+      }
+    } catch (e) {
+      console.log(`failed to deploy lockup for ${beneficiaryAddresses[i]}`)
     }
+  }
+  const events: any[] = await lockupVaultFactory.queryFilter('VaultCreated')
+
+  for (let i = 0; i < events.length; i++) {
+    const beneficiary = events[i].args.beneficiary
+    const beneficiaryVaultAddress = events[i].args.vault
+    fs.writeFileSync(
+      outputFile,
+      '\n' + beneficiary + ',' + beneficiaryVaultAddress,
+      {
+        encoding: 'utf8',
+        flag: 'a+',
+      }
+    )
+  }
 }
 
 async function checkClaiming(vaultAddressA32: string) {
-    const provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
-    const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
-    const ecox = new ethers.Contract(TOKEN, ecoXABI.abi, wallet)
-    const initialbal = await ecox.balanceOf(await wallet.getAddress())
-    console.log(initialbal.toString())
-    const vault = new ethers.Contract(vaultAddressA32, cliffLockupVaultABI.abi, wallet)
-    let vaultbal = await ecox.balanceOf(vaultAddressA32)
-    console.log(vaultbal.toString())
-    let tx = await vault.claim()
-    tx = await tx.wait()
-    console.log(tx.status)
-    await new Promise(r => setTimeout(r, 20000));
-    vaultbal = await ecox.balanceOf(vaultAddressA32)
-    console.log(vaultbal.toString())
+  const provider: ethers.providers.BaseProvider =
+    new ethers.providers.JsonRpcProvider(RPCURL)
+  const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
+  const ecox = new ethers.Contract(TOKEN, ecoXABI.abi, wallet)
+  const initialbal = await ecox.balanceOf(await wallet.getAddress())
+  console.log(initialbal.toString())
+  const vault = new ethers.Contract(
+    vaultAddressA32,
+    cliffLockupVaultABI.abi,
+    wallet
+  )
+  let vaultbal = await ecox.balanceOf(vaultAddressA32)
+  console.log(vaultbal.toString())
+  let tx = await vault.claim()
+  tx = await tx.wait()
+  console.log(tx.status)
+  await new Promise((r) => setTimeout(r, 20000))
+  vaultbal = await ecox.balanceOf(vaultAddressA32)
+  console.log(vaultbal.toString())
 }
 
 async function stake(vaultAddress: string) {
-    const provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
-    const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
-    const ecox = new ethers.Contract(TOKEN, ecoXABI.abi, wallet)
+  const provider: ethers.providers.BaseProvider =
+    new ethers.providers.JsonRpcProvider(RPCURL)
+  const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
+  const ecox = new ethers.Contract(TOKEN, ecoXABI.abi, wallet)
 
-    const vault = new ethers.Contract(vaultAddress, cliffLockupVaultABI.abi, wallet)
-    console.log(await vault.lockup())
-    console.log(await vault.beneficiary())
-    console.log(await wallet.getAddress())
-    const stakedAmount = '100000000000000000000'
-    
-    let tx = await ecox.approve('0x96fa9c18d6A6F6c321Ab396555E4Db8C976217eA', stakedAmount)
-    tx = await tx.wait()
-    console.log(tx.status)
+  const vault = new ethers.Contract(
+    vaultAddress,
+    cliffLockupVaultABI.abi,
+    wallet
+  )
+  console.log(await vault.lockup())
+  console.log(await vault.beneficiary())
+  console.log(await wallet.getAddress())
+  const stakedAmount = '100000000000000000000'
 
-    tx = await vault.stake(stakedAmount)
-    tx = await tx.wait()
-    console.log(tx.status)
+  let tx = await ecox.approve(
+    '0x96fa9c18d6A6F6c321Ab396555E4Db8C976217eA',
+    stakedAmount
+  )
+  tx = await tx.wait()
+  console.log(tx.status)
+
+  tx = await vault.stake(stakedAmount)
+  tx = await tx.wait()
+  console.log(tx.status)
 }
 
 async function checkBeneficiary(vaultAddress: string) {
-    const provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
-    const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
+  const provider: ethers.providers.BaseProvider =
+    new ethers.providers.JsonRpcProvider(RPCURL)
+  const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
 
-    const vault = new ethers.Contract(vaultAddress, cliffLockupVaultABI.abi, wallet)
-    console.log(await vault.beneficiary())
+  const vault = new ethers.Contract(
+    vaultAddress,
+    cliffLockupVaultABI.abi,
+    wallet
+  )
+  console.log(await vault.beneficiary())
 }
 
-async function deploySingleVault(cliffFactoryAddress: string, beneficiary: string, admin: string, duration: number) {
-    const provider: ethers.providers.BaseProvider = new ethers.providers.JsonRpcProvider(RPCURL)
-    const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
+async function deploySingleVault(
+  cliffFactoryAddress: string,
+  beneficiary: string,
+  admin: string,
+  duration: number
+) {
+  const provider: ethers.providers.BaseProvider =
+    new ethers.providers.JsonRpcProvider(RPCURL)
+  const wallet: ethers.Wallet = new ethers.Wallet(signerPK, provider)
 
-    const cliffLockupFactory = new ethers.Contract(cliffFactoryAddress, cliffLockupFactoryABI.abi, wallet)
-    const cliffTimestamp = (await provider.getBlock('latest')).timestamp + duration
-    const tx = await cliffLockupFactory.connect(wallet).createVault(beneficiary, admin, cliffTimestamp)
-    const receipt = await tx.wait()
-    if (receipt.status === 1) {
-        console.log(`deployed lockup for ${beneficiary}`)
-    }
+  const cliffLockupFactory = new ethers.Contract(
+    cliffFactoryAddress,
+    cliffLockupFactoryABI.abi,
+    wallet
+  )
+  const cliffTimestamp =
+    (await provider.getBlock('latest')).timestamp + duration
+  const tx = await cliffLockupFactory
+    .connect(wallet)
+    .createVault(beneficiary, admin, cliffTimestamp)
+  const receipt = await tx.wait()
+  if (receipt.status === 1) {
+    console.log(`deployed lockup for ${beneficiary}`)
+  }
 }
 
-deploySingleVault('0xd4833A3437B835A1ec8A1e6d097aB21a5d62eC00', '0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78', '0xa1B0Fff8876358CA1aad5eAb7f9040617B0fc6d8', 86400)
+// deploySingleVault('0xd4833A3437B835A1ec8A1e6d097aB21a5d62eC00', '0xca76f536C55Dd5F286b4144b3f18b19e23ef1D78', '0xa1B0Fff8876358CA1aad5eAb7f9040617B0fc6d8', 86400)
+main()

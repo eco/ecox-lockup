@@ -221,9 +221,12 @@ contract ECOxCliffLockupTest is Test, GasSnapshot {
         beneficiary.stake(vault, 300);
         assertEq(stakedToken.balanceOf(address(vault)), 300);
         beneficiary.delegate(vault, address(beneficiary));
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 300);
         token.transfer(address(vault), 100);
         beneficiary.stake(vault, 50); // 350 staked, 50 unstaked
+        assertEq(stakedToken.getVotingGons(address(beneficiary)), 350);
         beneficiary.delegate(vault, address(someOtherBeneficiary));
+        assertEq(stakedToken.getVotingGons(address(someOtherBeneficiary)), 350);
         token.transfer(address(vault), 100); // 350 staked, 150 unstaked
         beneficiary.stake(vault, 25); // 375 staked, 125 unstaked
         beneficiary.unstake(vault, 200); // 175 staked, 325 unstaked
@@ -266,6 +269,7 @@ contract ECOxCliffLockupTest is Test, GasSnapshot {
         assertEq(token.balanceOf(address(vault)), 0);
         beneficiary.delegate(vault, address(beneficiary));
         assertEq(vault.currentDelegate(), address(beneficiary));
+        // console2.log(vault.delegatedAmount());
         beneficiary.unstake(vault, unstakeAmt);
         assertEq(stakedToken.balanceOf(address(vault)), stakeAmt - unstakeAmt);
         assertEq(token.balanceOf(address(vault)), unstakeAmt);
